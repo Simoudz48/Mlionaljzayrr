@@ -1,0 +1,1442 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>مليون الجزائر - الإصدار النهائي</title>
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@600;700;900&family=Kufam:wght@700&display=swap" rel="stylesheet">
+
+    <style>
+        :root { 
+            --neon-blue: #007bff; 
+            --neon-green: #28a745; 
+            --neon-red: #dc3545; 
+            --main-yellow: #fdd835; 
+            --guaranteed-yellow: #ffbf00; 
+            --algeria-red: #d22730; 
+            --dark-blue-bg: #000033; 
+            --suspense-orange: #ff8c00;
+            --gold-main: #D4AF37;
+            --gold-light: #FFDF70;
+            --check-bg: #FFFDE7;
+        }
+
+        @keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.05); } 100% { transform: scale(1); } }
+        @keyframes blink { 50% { background-color: var(--main-yellow); color: #000; } }
+        @keyframes phoneBlink { 50% { background-color: rgba(0, 123, 255, 0.3); } }
+
+        * { box-sizing: border-box; }
+        body { background: linear-gradient(to bottom, #1a1a1a, #000000); color: #ffffff; font-family: 'Cairo', sans-serif; margin: 0; padding: 15px; display: flex; justify-content: center; align-items: center; min-height: 100vh; overflow: hidden; transition: background 0.5s ease; }
+        .screen { display: none; flex-direction: column; width: 100%; max-width: 500px; justify-content: center; align-items: center; }
+        .screen.active { display: flex; animation: fadeInUp 0.5s ease-out; }
+        .container { width: 100%; display: flex; flex-direction: column; align-items: center; gap: 15px; }
+        .sound-icon-btn { font-size: 2rem; color: var(--main-yellow); cursor: pointer; text-shadow: 0 0 8px var(--main-yellow); }
+
+        #main-menu-screen .green-button { width: 65px; height: 65px; border-radius: 50%; border: 3px solid silver; background: radial-gradient(circle at 50% 120%, #008000, #004d00); box-shadow: 0 5px 15px rgba(0,0,0,0.4), inset 0 2px 2px rgba(255,255,255,0.3); display: flex; justify-content:center; align-items:center; }
+        
+        #quiz-screen .status-bar { width: 100%; display: flex; justify-content: space-between; font-size: clamp(1rem, 4vw, 1.1rem); color: #90ee90; padding: 0 5px; margin-bottom: 10px; }
+        #quiz-screen .status-bar .status-number { font-weight: 700; color: #ff6347; font-size: clamp(1.1rem, 4.5vw, 1.3rem); margin-inline-start: 5px; }
+        #quiz-screen .quiz-header { width: 100%; display: flex; justify-content: space-between; align-items: center; }
+        #quiz-screen .lifeline-icon { width: 45px; height: 45px; border-radius: 50%; display: flex; justify-content: center; align-items: center; background-color: rgba(0,0,0,0.5); font-size: 1.2rem; color: var(--main-yellow); cursor: pointer; border: 2px solid #fff; }
+        #quiz-screen .lifeline-icon.used { opacity: 0.4; cursor: not-allowed; pointer-events: none; }
+        #quiz-screen .timer { font-size: 1.8rem; font-weight: 900; background-color: #333; width: 50px; height: 50px; border-radius: 50%; display: flex; justify-content: center; align-items: center; border: 2px solid var(--main-yellow); }
+        #quiz-screen .question-box p { color: var(--main-yellow); font-size: clamp(1.2rem, 5vw, 1.6rem); margin: 0; }
+        
+        #quiz-screen .answer-btn {
+            display: flex;
+            align-items: center;
+            border: 2px solid var(--neon-blue);
+            background-color: var(--dark-blue-bg);
+            box-shadow: 0 0 8px rgba(0, 123, 255, 0.6);
+            border-radius: 12px;
+            color: white;
+            padding: 10px;
+            font-size: clamp(1rem, 4vw, 1.3rem);
+            font-weight: 700;
+            cursor: pointer;
+            width: 100%;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+        .answer-prefix {
+            background-color: var(--main-yellow);
+            color: #000;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            display: inline-flex;
+            justify-content: center;
+            align-items: center;
+            font-weight: 900;
+            margin-left: 15px;
+            flex-shrink: 0;
+        }
+        .answer-text {
+            flex-grow: 1;
+        }
+        #quiz-screen .answer-btn:hover:not(:disabled) { background-color: var(--neon-blue); color: #fff; transform: translateY(-2px); box-shadow: 0 4px 15px rgba(0, 123, 255, 0.7); }
+        #quiz-screen .answer-btn.selected-wait { background-color: var(--suspense-orange); border-color: var(--suspense-orange); box-shadow: 0 0 15px var(--suspense-orange); color: #fff; transform: scale(1.02); }
+        #quiz-screen .answer-btn.correct { background-color: var(--neon-green); border-color: var(--neon-green); box-shadow: 0 0 10px var(--neon-green); color: #fff; }
+        #quiz-screen .answer-btn.incorrect { background-color: var(--neon-red); border-color: var(--neon-red); box-shadow: 0 0 10px var(--neon-red); color: #fff; }
+        #quiz-screen .answer-btn.phone-suggestion { animation: phoneBlink 0.5s ease-in-out 4; }
+        #quiz-screen .answer-btn.hidden { visibility: hidden; pointer-events: none; }
+
+        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.8); display: none; justify-content: center; align-items: center; z-index: 1000; padding: 15px; }
+        .modal-overlay.visible { display: flex; }
+
+        /* --- MODIFIED: New text-based poll styles --- */
+        .poll-modal { background: var(--dark-blue-bg); padding: 20px; border-radius: 15px; border: 3px solid #fff; text-align: center; width: 100%; max-width: 350px; }
+        .poll-results-container {
+            width: 100%;
+            margin: 20px 0;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            align-items: stretch;
+        }
+        .poll-result-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background-color: rgba(0, 123, 255, 0.1);
+            padding: 10px 15px;
+            border-radius: 8px;
+            border-right: 4px solid var(--neon-blue);
+        }
+        .poll-result-label {
+            font-size: 1.2rem;
+            color: #fff;
+        }
+        .poll-result-value {
+            font-size: 1.4rem;
+            font-weight: 900;
+            color: var(--main-yellow);
+        }
+        #close-poll-btn { margin-top: 15px; padding: 8px 25px; background-color: var(--main-yellow); color: #000; border: none; border-radius: 5px; font-size: 1rem; cursor: pointer; }
+
+        .about-modal { background: var(--dark-blue-bg); color: var(--main-yellow); padding: 20px 25px; border-radius: 15px; border: 3px solid #fff; text-align: right; width: 100%; max-width: 480px; position: relative; max-height: 85vh; overflow-y: auto; }
+        .close-modal-btn { position: absolute; top: 5px; left: 10px; background: transparent; border: none; color: var(--main-yellow); font-size: 2.5rem; cursor: pointer; line-height: 1; z-index: 10; }
+        .about-modal h3 { color: #fff; border-bottom: 1px solid var(--main-yellow); padding-bottom: 5px; margin-top: 20px; }
+        .about-modal p, .about-modal li { font-size: clamp(0.9rem, 3.5vw, 1rem); line-height: 1.7; }
+        .about-modal ul { list-style: none; padding-right: 0; margin-right: 0; }
+        .about-modal hr { border: 0; height: 1px; background-image: linear-gradient(to left, rgba(255, 255, 255, 0), rgba(255, 255, 255, 0.75), rgba(255, 255, 255, 0)); margin: 20px 0;}
+
+        #money-tree-screen .money-ladder { width: 100%; max-width: 350px; background-color: var(--dark-blue-bg); border: 4px solid #ccc; border-radius: 20px; padding: 10px; display: flex; flex-direction: column; gap: 2px; }
+        .prize-item { display: flex; justify-content: space-between; padding: 2px 10px; border-radius: 8px; font-size: clamp(0.8rem, 3.5vw, 1rem); font-weight: 700; }
+        .prize-item.guaranteed .amount { color: var(--guaranteed-yellow); }
+        .prize-item.current { animation: blink 1s infinite; }
+        
+        #next-question-btn, #play-again-btn { margin-top: 20px; padding: 10px 30px; font-size: 1.5rem; border: none; border-radius: 10px; cursor: pointer; color: white; }
+        #next-question-btn { background-color: var(--neon-green); }
+        #play-again-btn { background-color: var(--neon-blue); }
+
+        #prize-check-screen .container { gap: 25px; }
+        .check-container {
+            display: none;
+            background: radial-gradient(circle, var(--check-bg), #fff59d);
+            color: #4A2E0C;
+            border: clamp(4px, 1.5vw, 6px) double var(--gold-main);
+            border-radius: 15px;
+            padding: clamp(10px, 4vw, 20px);
+            width: 100%;
+            max-width: 450px;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.4);
+            font-family: 'Cairo', sans-serif;
+            position: relative;
+        }
+        .check-header { text-align: center; border-bottom: 2px solid var(--gold-main); padding-bottom: 10px; margin-bottom: 20px; }
+        .check-header h2 { font-family: 'Kufam', cursive; color: #8B4513; margin: 0; font-size: clamp(1.2rem, 5vw, 1.6rem); }
+        .check-header p { margin: 5px 0 0; font-size: clamp(0.8rem, 3vw, 1rem); color: #6B4F2E; }
+        .check-body .check-line { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: clamp(15px, 4vw, 20px); font-size: clamp(0.8rem, 3.5vw, 1rem); }
+        .check-body label { font-weight: 700; white-space: nowrap; margin-left: 10px; }
+        .check-body .value { border-bottom: 2px dotted #997a4a; padding: 0 10px 2px 10px; font-weight: bold; font-size: clamp(0.9rem, 3.8vw, 1.1rem); flex-grow: 1; text-align: center; }
+        .check-signature { margin-top: 20px; text-align: center; }
+        .check-signature p { font-style: italic; border-top: 1px solid #4A2E0C; padding-top: 5px; display: inline-block; text-align: center; }
+        .check-award-icon { font-size: clamp(2.5rem, 8vw, 3rem); color: var(--gold-main); text-shadow: 0 0 10px rgba(212, 175, 55, 0.7); }
+    </style>
+</head>
+<body>
+    <div id="main-menu-screen" class="screen active"></div>
+    <div id="quiz-screen" class="screen"></div>
+    <div id="money-tree-screen" class="screen"></div>
+    <div id="prize-check-screen" class="screen"></div>
+
+    <!-- MODIFIED: Audience Poll Modal HTML -->
+    <div id="poll-modal-overlay" class="modal-overlay">
+        <div class="poll-modal">
+            <h2>رأي الجمهور</h2>
+            <div id="poll-results-container" class="poll-results-container">
+                <!-- Results will be injected here by JavaScript -->
+            </div>
+            <button id="close-poll-btn">إغلاق</button>
+        </div>
+    </div>
+
+    <!-- About Program Modal -->
+    <div id="about-modal-overlay" class="modal-overlay">
+    </div>
+    
+    <!-- Audio Elements -->
+    <audio id="bg-music" src="https://www.chosic.com/wp-content/uploads/2021/08/Inspiring-and-uplifting-music-by-prastono.mp3" loop preload="auto"></audio>
+    <audio id="suspense-sound" src="https://www.myinstants.com/media/sounds/lets-play-final-answer-sound-effect.mp3" preload="auto"></audio>
+    <audio id="correct-sound" src="https://www.myinstants.com/media/sounds/correct.mp3" preload="auto"></audio>
+    <audio id="wrong-sound" src="https://www.myinstants.com/media/sounds/wrong-answer-sound-effect.mp3" preload="auto"></audio>
+    <audio id="tick-sound" src="data:audio/mpeg;base64,UklGRkIAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQQAAAAAAP//AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP-"></audio>
+    <audio id="checkpoint-sound" src="https://www.myinstants.com/media/sounds/yay-fanfare.mp3" preload="auto"></audio>
+    <!-- ADDED SOUND -->
+    <audio id="menu-click-sound" src="data:audio/mpeg;base64,SUQzBAAAAAAAI1RTU0UAAAAPAAADTGF2ZjU2LjQwLjEwMQAAAAAAAAAAAAAA//tAwAAAAAAAAAAAAAAAAAAAAAAAABVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVX/xAJEAPECEE4AcHB0cFBEWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV-"></audio>
+
+<script>
+    // --- 1. GAME DATA AND STATE ---
+    const prizeLadder = [ { level: 1, prize: 100 }, { level: 2, prize: 200 }, { level: 3, prize: 300 }, { level: 4, prize: 500 }, { level: 5, prize: 1000, guaranteed: true }, { level: 6, prize: 2000 }, { level: 7, prize: 4000 }, { level: 8, prize: 8000 }, { level: 9, prize: 16000 }, { level: 10, prize: 32000, guaranteed: true }, { level: 11, prize: 64000 }, { level: 12, prize: 125000 }, { level: 13, prize: 250000 }, { level: 14, prize: 500000 }, { level: 15, prize: 1000000, guaranteed: true }];
+    
+    // --- MODIFIED: REPLACED QUESTIONS WITH ALGERIA-SPECIFIC ONES ---
+    const questions = [
+
+// --- اقتصاد وسياسة متقدمة ---
+{ question: "ما هي 'قاعدة 49/51' الاستثمارية التي تم تطبيقها في الجزائر؟", answers: ["قاعدة تفرض 51% ضريبة على الشركات الأجنبية", "قاعدة تلزم المستثمر الأجنبي بشريك جزائري يملك 51% من رأس المال", "قاعدة لتوزيع الأرباح", "قاعدة لاستيراد السيارات"], correctAnswerIndex: 1 },
+{ question: "ما هو 'صندوق ضبط الإيرادات' (FRR)؟", answers: ["صندوق لدعم الشباب", "صندوق لادخار فائض إيرادات الجباية البترولية", "صندوق للتقاعد", "صندوق لدعم الفلاحة"], correctAnswerIndex: 1 },
+{ question: "ما هي 'المنظمة الوطنية للمجاهدين' (ONM)؟", answers: ["حزب سياسي", "منظمة تمثل قدماء محاربي ثورة التحرير", "نقابة عمالية", "جمعية خيرية"], correctAnswerIndex: 1 },
+{ question: "من هو أول 'وزير أول' في عهد الرئيس الشاذلي بن جديد؟", answers: ["قاصدي مرباح", "عبد الحميد براهيمي", "مولود حمروش", "محمد بن أحمد عبد الغني"], correctAnswerIndex: 3 },
+{ question: "ما هو 'الحراك الشعبي' الذي بدأ في 22 فبراير 2019؟", answers: ["احتجاجات ضد غلاء المعيشة", "مسيرات سلمية ضخمة أدت إلى استقالة الرئيس بوتفليقة", "إضراب عمالي", "احتجاجات طلابية"], correctAnswerIndex: 1 },
+{ question: "ما هو 'الاتحاد العام للعمال الجزائريين' (UGTA)؟", answers: ["حزب سياسي", "أكبر مركزية نقابية في الجزائر", "منظمة لأرباب العمل", "جمعية حقوقية"], correctAnswerIndex: 1 },
+{ question: "ما هي 'عملية تصفير الديون الخارجية' التي قامت بها الجزائر في فترة البحبوحة المالية؟", answers: ["جدولة الديون", "تسديد كل الديون الخارجية للبلاد مسبقاً", "طلب قروض جديدة", "تأجيل سداد الديون"], correctAnswerIndex: 1 },
+{ question: "ما هو 'المجلس الاقتصادي والاجتماعي والبيئي' (CNESE)؟", answers: ["محكمة تجارية", "هيئة استشارية تقدم آراء للحكومة حول القضايا الاقتصادية والاجتماعية", "بنك استثماري", "وزارة التخطيط"], correctAnswerIndex: 1 },
+{ question: "ما هي 'المنطقة الحرة' في القانون التجاري الجزائري؟", answers: ["منطقة لا تطبق فيها القوانين", "منطقة جغرافية معفاة من بعض الرسوم الجمركية لجذب الاستثمار", "منطقة عسكرية", "منطقة سياحية"], correctAnswerIndex: 1 },
+{ question: "من هو السياسي الذي ترأس الحكومة التي أشرفت على أول انتخابات تعددية في 1991؟", answers: ["مولود حمروش", "سيد أحمد غزالي", "بلعيد عبد السلام", "رضا مالك"], correctAnswerIndex: 1 },
+
+// --- ثقافة وفنون دقيقة ---
+{ question: "من هو الشاعر الجزائري الذي كتب 'الإلياذة الجزائرية'؟", answers: ["محمد العيد آل خليفة", "مفدي زكريا", "أحمد سحنون", "صالح خباشة"], correctAnswerIndex: 1 },
+{ question: "ما هو 'فن الحوزي' الموسيقي؟", answers: ["نوع من الموسيقى الأندلسية أكثر شعبية من الصنعة والغرناطي", "موسيقى عسكرية", "موسيقى دينية", "موسيقى إلكترونية"], correctAnswerIndex: 0 },
+{ question: "من هو الرسام الذي يعتبر رائد 'الفن التجريدي' في الجزائر؟", answers: ["امحمد إيسياخم", "محمد خدة", "بشير يلس", "عبد القادر جريو"], correctAnswerIndex: 1 },
+{ question: "ما هي 'المدرسة العليا للفنون الجميلة' في الجزائر العاصمة؟", answers: ["متحف", "مؤسسة عريقة لتكوين الفنانين التشكيليين والمصممين", "قاعة عرض", "مسرح"], correctAnswerIndex: 1 },
+{ question: "من هو الممثل الذي اشتهر بدور 'سي مخلوف البومباردي' في فيلم 'الطاكسي المخفي'؟", answers: ["عثمان عريوات", "صالح أوقروت", "كمال بوعكاز", "حميد عاشوري"], correctAnswerIndex: 1 },
+{ question: "ما هو 'المهرجان الدولي للموسيقى السيمفونية' بالجزائر؟", answers: ["مهرجان سنوي يستضيف فرق أوركسترا عالمية", "مهرجان للموسيقى الشعبية", "مهرجان للراب", "مهرجان للجاز"], correctAnswerIndex: 0 },
+{ question: "من هو الكاتب الذي ألف رواية 'اللاز'؟", answers: ["كاتب ياسين", "محمد ديب", "الطاهر وطار", "رشيد ميموني"], correctAnswerIndex: 2 },
+{ question: "ما هي 'الزخرفة على الخشب' التي تشتهر بها منطقة الأغواط؟", answers: ["فن النقش والحفر على خشب العرعار", "فن التلوين على الخشب", "فن التطعيم بالصدف", "فن الحرق على الخشب"], correctAnswerIndex: 0 },
+{ question: "من هو مخرج فيلم 'الأجنحة المنكسرة' الذي يتناول حياة العقيد لطفي؟", answers: ["أحمد راشدي", "رشيد بن حاج", "جمال فزاز", "محمد سليم رياض"], correctAnswerIndex: 2 },
+{ question: "ما هو 'الشعر الملحون'؟", answers: ["شعر مكتوب باللغة الفرنسية", "شعر شعبي مكتوب باللهجة العامية ذو أوزان وقوافي معقدة", "شعر ديني", "شعر حر"], correctAnswerIndex: 1 },
+
+// --- أسئلة متنوعة متقدمة ---
+{ question: "ما هو 'مفاعل نور' النووي للأبحاث في منطقة درارية؟", answers: ["مفاعل لإنتاج الكهرباء", "مفاعل بحثي سلمي لإنتاج النظائر الطبية والبحث العلمي", "مفاعل عسكري", "مفاعل متوقف عن العمل"], correctAnswerIndex: 1 },
+{ question: "ما هي 'اتفاقيات أوسلو' التي رفضتها الجزائر؟", answers: ["اتفاقيات تجارية", "اتفاقيات سلام بين منظمة التحرير الفلسطينية وإسرائيل", "اتفاقيات بيئية", "اتفاقيات ترسيم حدود"], correctAnswerIndex: 1 },
+{ question: "ما هو اسم العملية التي قامت بها القوات الخاصة الجزائرية لتحرير الرهائن في 'تيقنتورين'؟", answers: ["عملية ثعلب الصحراء", "عملية الكماشة", "عملية 'عين أمناس'", "لا يوجد اسم رسمي"], correctAnswerIndex: 2 },
+{ question: "ما هي 'جماعة الـ 22'؟", answers: ["مجموعة فجرت الثورة", "أول حكومة جزائرية", "المجموعة التاريخية التي اجتمعت للتحضير للثورة قبل إعلانها", "مجموعة رياضية"], correctAnswerIndex: 2 },
+{ question: "ما هو 'الخط الأخضر' في الجزائر؟", answers: ["خط حدودي", "الاسم الآخر لمشروع السد الأخضر", "خط هاتفي للطوارئ البيئية", "خط فاصل في الصحراء"], correctAnswerIndex: 2 },
+{ question: "من هو 'سيبوس'؟", answers: ["قائد نوميدي", "واد كبير يمر بولاية قالمة وعنابة", "جبل في الأوراس", "ولي صالح"], correctAnswerIndex: 1 },
+{ question: "ما هو 'المرجان' الذي تشتهر به سواحل القالة؟", answers: ["نوع من الأسماك", "كائن بحري يستخدم في صناعة الحلي الفاخرة", "نبات بحري", "صخرة بركانية"], correctAnswerIndex: 1 },
+{ question: "ما هي 'الأرض المحروقة' كسياسة طبقها الاستعمار؟", answers: ["إحراق المحاصيل والقرى لمنع الدعم عن الثوار", "سياسة زراعية", "سياسة صناعية", "سياسة دبلوماسية"], correctAnswerIndex: 0 },
+{ question: "ما هو 'القانون العضوي'؟", answers: ["قانون ينظم جسم الإنسان", "قانون مكمل للدستور وذو أهمية خاصة", "قانون ينظم الزراعة العضوية", "قانون دولي"], correctAnswerIndex: 1 },
+{ question: "من هو 'الصادق' في مسلسل 'الحريق'؟", answers: ["بطل المسلسل", "صديق البطل", "شخصية ثانوية", "لا يوجد شخصية بهذا الاسم"], correctAnswerIndex: 0 },
+{ question: "ما هي 'مغارة ابن خلدون'؟", answers: ["مغارة سكنها الإنسان البدائي", "المغارة التي يقال أن ابن خلدون كتب فيها جزءاً من مقدمته في فرندة (تيارت)", "مغارة سياحية في جيجل", "مغارة في الصحراء"], correctAnswerIndex: 1 },
+{ question: "ما هي 'ساعة زيت' باللهجة الجزائرية؟", answers: ["ساعة من الزمن", "تعبير يعني 'من حين لآخر' أو 'أحياناً'", "وقت الغداء", "وقت متأخر من الليل"], correctAnswerIndex: 1 },
+{ question: "ما هي 'معركة إيسلي' عام 1844؟", answers: ["معركة بحرية ضد إسبانيا", "معركة بين فرنسا والمغرب بسبب دعم المغرب للأمير عبد القادر", "معركة داخلية بين القبائل", "معركة في الثورة التحريرية"], correctAnswerIndex: 1 },
+{ question: "من هو 'بشير يلس'؟", answers: ["مغني راي", "لاعب كرة قدم", "رسام ومدير سابق للمدرسة العليا للفنون الجميلة", "مخرج سينمائي"], correctAnswerIndex: 2 },
+{ question: "ما هو 'طريق الملح' تاريخياً؟", answers: ["طريق تجاري قديم كانت تعبره القوافل لنقل الملح من الصحراء إلى الشمال", "اسم رواية جزائرية", "طريق سريع حديث", "طريق ساحلي"], correctAnswerIndex: 0 },
+// --- الدفعة التاسعة: أسئلة متخصصة (المؤسسات الأمنية) وتفاصيل ثقافية (100 سؤال) ---
+// --- الجيش الوطني الشعبي (ANP) ---
+{ question: "ما هي العقيدة الأساسية للجيش الوطني الشعبي؟", answers: ["عقيدة هجومية", "عقيدة دفاعية وعدم التدخل خارج الحدود إلا بضوابط", "عقيدة توسعية", "عقيدة محايدة"], correctAnswerIndex: 1 },
+{ question: "ما هي القوات التي تشكل فروع الجيش الوطني الشعبي الرئيسية؟", answers: ["البرية والجوية والبحرية والدفاع الجوي عن الإقليم", "البرية والجوية فقط", "البرية والبحرية والدرك", "القوات الخاصة والمشاة"], correctAnswerIndex: 0 },
+{ question: "ما اسم المجلة الشهرية التي يصدرها الجيش الوطني الشعبي؟", answers: ["المجاهد", "الشعب", "الجيش", "الوطن"], correctAnswerIndex: 2 },
+{ question: "ما هي 'الأكاديمية العسكرية لمختلف الأسلحة' بشرشال؟", answers: ["مدرسة لتكوين ضباط الصف", "أهم مؤسسة لتكوين ضباط الجيش العاملين", "مركز للبحث العلمي", "قاعدة جوية"], correctAnswerIndex: 1 },
+{ question: "من هو القائد الأعلى للقوات المسلحة في الجزائر؟", answers: ["رئيس أركان الجيش", "وزير الدفاع الوطني", "رئيس الجمهورية", "قائد الحرس الجمهوري"], correctAnswerIndex: 2 },
+{ question: "ما هو دور 'الحرس الجمهوري'؟", answers: ["حراسة الحدود", "مكافحة الإرهاب", "توفير الحماية والتشريفات لرئيس الجمهورية والمقرات السيادية", "التدخل في الكوارث"], correctAnswerIndex: 2 },
+{ question: "ما هي 'الخدمة الوطنية' في الجزائر؟", answers: ["خدمة تطوعية", "خدمة عسكرية إلزامية للشباب البالغين سناً معينة", "فترة تدريب مهني", "خدمة مدنية"], correctAnswerIndex: 1 },
+{ question: "في أي وزارة يتم إدماج 'وزارة الدفاع الوطني'؟", answers: ["لا تتبع أي وزارة، هي وزارة قائمة بذاتها", "تتبع وزارة الداخلية", "تتبع رئاسة الوزراء", "تتبع رئاسة الجمهورية مباشرة"], correctAnswerIndex: 0 },
+{ question: "ما هي رتبة 'فريق' في الجيش؟", answers: ["أعلى من لواء وأقل من فريق أول", "أعلى من عميد وأقل من لواء", "أعلى من عقيد وأقل من عميد", "أعلى رتبة في الجيش"], correctAnswerIndex: 0 },
+{ question: "ما هو 'متحف المجاهد' و 'متحف الجيش'؟", answers: ["نفس المتحف", "متحفان مختلفان، الأول للتاريخ والثاني للجيش بجانب مقام الشهيد", "متحف واحد يقع في مقام الشهيد", "متاحف جهوية فقط"], correctAnswerIndex: 1 },
+
+// --- المديرية العامة للأمن الوطني (الشرطة) ---
+{ question: "ما هو الشعار الرسمي للشرطة الجزائرية؟", answers: ["أمن وخدمة المواطن", "شرف، انضباط، عمل", "الشرطة في خدمة الشعب", "القانون فوق الجميع"], correctAnswerIndex: 2 },
+{ question: "ما هي فرقة البحث والتدخل (BRI)؟", answers: ["فرقة مرور", "فرقة نخبة لمكافحة الجريمة المنظمة والتدخل في الحالات الخطرة", "شرطة علمية", "شرطة الحدود"], correctAnswerIndex: 1 },
+{ question: "ما هو الاسم الرسمي لمدرسة تكوين ضباط الشرطة في الجزائر؟", answers: ["المدرسة العليا للشرطة 'علي تونسي'", "أكاديمية الشرطة بالصومعة", "مدرسة ضباط الصف بشاطوناف", "كلها أسماء صحيحة لمؤسسات مختلفة"], correctAnswerIndex: 0 },
+{ question: "ما هو لون الزي الرسمي لشرطة المرور في الجزائر؟", answers: ["أزرق داكن", "أبيض وأزرق", "أخضر", "أسود"], correctAnswerIndex: 1 },
+{ question: "ما هي 'الشرطة العلمية والتقنية'؟", answers: ["شرطة الإنترنت", "فرقة مكافحة الشغب", "فرقة تستخدم العلوم لجمع الأدلة من مسرح الجريمة", "شرطة سياحية"], correctAnswerIndex: 2 },
+{ question: "ما هو الرقم 17؟", answers: ["رقم النجدة للشرطة", "رقم الحماية المدنية", "رقم الدرك الوطني", "رقم الإسعاف"], correctAnswerIndex: 0 },
+{ question: "ما هي 'أمن الدائرة'؟", answers: ["مقر الولاية", "المستوى الإداري للشرطة على مستوى الدائرة", "فرقة خاصة", "سجن"], correctAnswerIndex: 1 },
+{ question: "من هو أول مدير عام للأمن الوطني بعد الاستقلال؟", answers: ["محمد يزيد", "الهاشمي جيار", "محمد بوضياف", "محمد مدغين"], correctAnswerIndex: 3 },
+{ question: "ما هي 'شرطة الحدود' (PAF)؟", answers: ["شرطة تحرس الحدود البرية", "شرطة مسؤولة عن أمن المطارات والموانئ والمعابر الحدودية", "شرطة سياحية", "شرطة البيئة"], correctAnswerIndex: 1 },
+{ question: "ما هي الرتبة التي تسبق 'عميد شرطة' مباشرة؟", answers: ["محافظ شرطة", "عميد أول للشرطة", "مفتش رئيسي", "ملازم أول"], correctAnswerIndex: 0 },
+
+// --- قيادة الدرك الوطني ---
+{ question: "لأي وزارة يتبع الدرك الوطني؟", answers: ["وزارة الداخلية", "وزارة العدل", "وزارة الدفاع الوطني", "رئاسة الوزراء"], correctAnswerIndex: 2 },
+{ question: "ما هو مجال الاختصاص الإقليمي للدرك الوطني غالباً؟", answers: ["المدن الكبرى فقط", "المناطق الريفية وشبه الحضرية والطرقات", "المطارات والموانئ", "المنشآت النفطية"], correctAnswerIndex: 1 },
+{ question: "ما هي 'وحدة أمن الطرقات'؟", answers: ["وحدة لتأمين المنشآت", "وحدة تابعة للدرك الوطني لتنظيم ومراقبة حركة المرور", "وحدة خاصة بالشرطة", "وحدة عسكرية"], correctAnswerIndex: 1 },
+{ question: "ما هو 'المعهد الوطني للأدلة الجنائية وعلم الإجرام' ببوشاوي؟", answers: ["معهد تابع للشرطة", "معهد تابع للدرك الوطني للتحاليل الجنائية", "معهد جامعي", "معهد تابع لوزارة العدل"], correctAnswerIndex: 1 },
+{ question: "ما هو لون الزي الرسمي للدرك الوطني؟", answers: ["أزرق داكن", "أخضر", "أسود", "رمادي"], correctAnswerIndex: 1 },
+{ question: "ما هي 'فصيلة الأبحاث' في الدرك الوطني؟", answers: ["فصيلة للتدخل السريع", "فصيلة متخصصة في التحقيق في القضايا الجنائية المعقدة", "فصيلة لحماية الشخصيات", "فصيلة مرور"], correctAnswerIndex: 1 },
+{ question: "ما هو الرقم الأخضر للدرك الوطني؟", answers: ["17", "14", "1055", "1548"], correctAnswerIndex: 2 },
+{ question: "ما هي 'المجموعة الإقليمية للدرك الوطني'؟", answers: ["وحدة على مستوى الدائرة", "وحدة على مستوى البلدية", "وحدة على مستوى الولاية", "وحدة جهوية"], correctAnswerIndex: 2 },
+{ question: "من هو قائد الدرك الوطني في بداية الثورة التحريرية؟", answers: ["أحمد بن شريف", "العقيد شعباني", "هواري بومدين", "كريم بلقاسم"], correctAnswerIndex: 0 },
+{ question: "ما هي 'المفرزة الخاصة للتدخل' (DSI)؟", answers: ["وحدة نخبة الدرك الوطني لمكافحة الإرهاب والجرائم الخطيرة", "فرقة لركوب الدراجات", "فرقة سينوتقنية (الكلاب المدربة)", "فرقة تحقيق"], correctAnswerIndex: 0 },
+
+// --- الحماية المدنية ---
+{ question: "ما هو الرقم الهاتفي للحماية المدنية في الجزائر؟", answers: ["17", "1055", "1548", "14"], correctAnswerIndex: 3 },
+{ question: "ما هي المهمة الأساسية للحماية المدنية؟", answers: ["مكافحة الجريمة", "تنظيم المرور", "إطفاء الحرائق وإسعاف وإنقاذ الأشخاص", "حراسة السواحل"], correctAnswerIndex: 2 },
+{ question: "ما هو لون مركبات الحماية المدنية؟", answers: ["أزرق", "أبيض", "أحمر", "أخضر"], correctAnswerIndex: 2 },
+{ question: "ما هي 'فرقة الغطاسين'؟", answers: ["فرقة لتسلق الجبال", "فرقة للبحث والإنقاذ في الأوساط المائية (السدود، الشواطئ)", "فرقة لإطفاء الحرائق", "فرقة إسعاف"], correctAnswerIndex: 1 },
+{ question: "ما هي 'فرقة البحث والإنقاذ تحت الردوم' (USAR)؟", answers: ["فرقة للحرائق الكيميائية", "فرقة متخصصة في البحث عن ناجين بعد الزلازل والانهيارات", "فرقة لحرائق الغابات", "فرقة إسعاف جوي"], correctAnswerIndex: 1 },
+{ question: "ما هو شعار اليوم العالمي للحماية المدنية؟", answers: ["الوقاية أولاً", "يد بيد لإنقاذ حياة", "كل عام يتغير الشعار", "الحماية المدنية والتكنولوجيا"], correctAnswerIndex: 2 },
+{ question: "ما هي رتبة 'طبيب نقيب' في الحماية المدنية؟", answers: ["رتبة إدارية", "رتبة لضابط طبيب", "رتبة ممرض", "لا توجد هذه الرتبة"], correctAnswerIndex: 1 },
+{ question: "ماذا يعني 'المخطط الاستعجالي للولاية' (Plan ORSEC)؟", answers: ["مخطط بناء", "خطة لتنظيم النجدة في حالة وقوع كارثة كبرى", "مخطط مروري", "خطة لمكافحة الجفاف"], correctAnswerIndex: 1 },
+{ question: "ما هي 'الوحدة الرئيسية' للحماية المدنية؟", answers: ["أكبر ثكنة في الولاية وغالباً ما تكون في العاصمة", "الوحدة المتنقلة", "الوحدة البحرية", "وحدة التدريب"], correctAnswerIndex: 0 },
+{ question: "ما هي 'الوقاية' في مصطلحات الحماية المدنية؟", answers: ["الإطفاء", "الإسعاف", "مجموعة الإجراءات لمنع وقوع الحوادث أو تقليل آثارها", "التحقيق بعد الحادث"], correctAnswerIndex: 2 },
+
+// --- تفاصيل ثقافية متنوعة ---
+{ question: "ما هي 'التارڨي'؟", answers: ["نوع من الموسيقى", "لهجة أمازيغية يتحدث بها الطوارق", "لباس تقليدي", "أكلة شعبية"], correctAnswerIndex: 1 },
+{ question: "من هو 'بابا عروج'؟", answers: ["شخصية كرتونية", "الأخ الأكبر لخير الدين بربروس وشارك في تحرير الجزائر", "ولي صالح", "بطل رياضي"], correctAnswerIndex: 1 },
+{ question: "ما هي 'القرقابو'؟", answers: ["آلة إيقاعية معدنية تستخدم في موسيقى الڨناوي (الديوان)", "نوع من الأحذية", "قبعة تقليدية", "طبق طعام"], correctAnswerIndex: 0 },
+{ question: "ما هو 'بغل البايلك' في الحكايات الشعبية؟", answers: ["حيوان أسطوري", "رمز للشخص الذي يعمل بجد دون مقابل أو فائدة", "شخصية تاريخية", "لعبة أطفال"], correctAnswerIndex: 1 },
+{ question: "ما هي 'دار دزاير'؟", answers: ["اسم فندق", "تعبير يعني 'الجزائر' أو 'بلاد الجزائر'", "اسم رواية", "اسم فيلم"], correctAnswerIndex: 1 },
+{ question: "ما هو 'الحنبل'؟", answers: ["نوع من الخبز", "غطاء أو بساط من الصوف الخشن يستخدم كفراش أو ديكور", "سروال تقليدي", "طبق لحم"], correctAnswerIndex: 1 },
+{ question: "ما هي 'الزاوية العلوية' التي أسسها الشيخ أحمد بن مصطفى العلاوي؟", answers: ["زاوية في قسنطينة", "طريقة صوفية عالمية انطلقت من مستغانم", "زاوية في تلمسان", "زاوية في الأغواط"], correctAnswerIndex: 1 },
+{ question: "ما هو 'الركح' في لغة المسرح؟", answers: ["الكواليس", "خشبة المسرح", "مقاعد الجمهور", "النص المسرحي"], correctAnswerIndex: 1 },
+{ question: "ما هي 'الغيطة'؟", answers: ["آلة وترية", "آلة نفخ تقليدية شبيهة بالمزمار", "رقصة شعبية", "أغنية بدوية"], correctAnswerIndex: 1 },
+{ question: "ما هو 'التويست' في السينما؟", answers: ["نوع من الرقص", "مفاجأة غير متوقعة في نهاية القصة (Plot Twist)", "تقنية تصوير", "نوع من الإضاءة"], correctAnswerIndex: 1 },
+// --- الدفعة العاشرة والأخيرة: المشاهير، التكنولوجيا، القانون، وتفاصيل ختامية (100 سؤال) ---
+// --- المغنون والمشاهير ---
+{ question: "من هو مغني الراي الذي لقب بـ 'الشاب' وأغتيل في وهران عام 1994؟", answers: ["الشاب مامي", "الشاب خالد", "الشاب حسني", "الشاب بلال"], correctAnswerIndex: 2 },
+{ question: "من هو الفنان الكوميدي الذي اشتهر ببرنامج الكاميرا الخفية 'واش داني'؟", answers: ["صالح أوقروت", "كمال بوعكاز", "حكيم دكار", "رضا سيتي 16"], correctAnswerIndex: 0 },
+{ question: "من هو المغني الذي اشتهر بأغنية 'يا الرايح وين مسافر' وأعاد دحمان الحراشي توزيعها؟", answers: ["الشيخ الحسناوي", "سليمان عازم", "أعمر الزاهي", "كمال مسعودي"], correctAnswerIndex: 0 },
+{ question: "من هي المغنية التي اشتهرت في فن المالوف القسنطيني وتلقب بـ 'الحاجة'؟", answers: ["سلوى", "زكية محمد", "ريم حقيقي", "حمدي بناني"], correctAnswerIndex: 1 },
+{ question: "من هو الفنان الذي يلقب بـ 'ملك الأغنية السطايفية'؟", answers: ["الشاب خلاص", "سمير السطايفي", "الشيخ العفريت", "بكاري بن ثابت"], correctAnswerIndex: 1 },
+{ question: "من هي الفنانة التي اشتهرت بدور 'بيونة' في مسلسل 'ناس ملاح سيتي'؟", answers: ["فريدة صابونجي", "شافية بوذراع", "بايونة (باية بوزار)", "نضال الجزائري"], correctAnswerIndex: 2 },
+{ question: "من هو الفنان الشامل الذي اشتهر ببرنامج 'الفهامة'؟", answers: ["محمد خساني", "سليمان بخليلي", "محمد لحويكي", "عبد القادر جريو"], correctAnswerIndex: 0 },
+{ question: "من هو مغني الراب الذي يعتبر من رواد هذا الفن في الجزائر (Lotfi Double Kanon)؟", answers: ["لطفي دوبل كانون", "كريم الغانغ", "ديدين كلاش", "سولكينغ"], correctAnswerIndex: 0 },
+{ question: "من هو الفنان العالمي الجزائري الذي اشتهر بأغنية 'Dalida' و 'Zemër'؟", answers: ["الشاب خالد", "دي جي سنايك", "سولكينغ", "لالجيرينو"], correctAnswerIndex: 2 },
+{ question: "من هو الممثل الذي اشتهر بدور 'جمعي' في سلسلة 'جمعي فاميلي'؟", answers: ["محمد بوشايب", "صالح أوقروت", "عثمان بن داود", "كمال بوعكاز"], correctAnswerIndex: 1 },
+{ question: "من هو 'الشيخ حمادة'؟", answers: ["مغني راي", "أحد أعمدة أغنية 'البدوي' في الغرب الجزائري", "مغني شعبي", "مغني أندلسي"], correctAnswerIndex: 1 },
+{ question: "من هو الفنان الذي اشتهر بأغنية 'جزائرية' و'C'est la vie'؟", answers: ["الشاب مامي", "رشيد طه", "الشاب خالد", "الشاب بلال"], correctAnswerIndex: 2 },
+{ question: "من هي الفنانة التي لعبت دور 'يمّا' في مسلسل 'أعصاب وأوتار'؟", answers: ["شافية بوذراع", "فريدة صابونجي", "بيونة", "كلثوم"], correctAnswerIndex: 0 },
+{ question: "من هو 'بلاوي الهواري'؟", answers: ["مؤسس فن الراي الحديث بوهران", "مغني شعبي عاصمي", "موسيقي أندلسي", "رسام تشكيلي"], correctAnswerIndex: 0 },
+{ question: "من هو المغني الذي اشتهر بأغنية 'شوفو شوفو' ولقب بـ'عميد الأغنية الشاوية'؟", answers: ["علي الخنشلي", "عيسى الجرموني", "كاتشو", "بقارعلاوة"], correctAnswerIndex: 1 },
+
+// --- التكنولوجيا والابتكار ---
+{ question: "ما هو اسم الحديقة التكنولوجية الكبرى في الجزائر العاصمة؟", answers: ["سيدي عبد الله", "باب الزوار", "وادي السمار", "الرويبة"], correctAnswerIndex: 0 },
+{ question: "ما هي 'Ooredoo'؟", answers: ["شركة طيران", "شركة اتصالات للهاتف النقال", "شركة إنترنت", "بنك"], correctAnswerIndex: 1 },
+{ question: "ما هو 'وادي.كوم' (ouedkniss.com)؟", answers: ["موقع إخباري", "أشهر موقع جزائري للإعلانات المبوبة والبيع والشراء عبر الإنترنت", "موقع حكومي", "شبكة تواصل اجتماعي"], correctAnswerIndex: 1 },
+{ question: "ما هي 'Yassir'؟", answers: ["شركة توصيل طعام", "تطبيق لطلب سيارات الأجرة وخدمات التوصيل", "شركة إنترنت", "منصة تعليمية"], correctAnswerIndex: 1 },
+{ question: "ما هو الامتداد الرسمي لنطاقات الإنترنت في الجزائر؟", answers: [".dz", ".alg", ".dzr", ".af"], correctAnswerIndex: 0 },
+{ question: "ما هي 'بطاقة CIB'؟", answers: ["بطاقة هوية", "بطاقة دفع إلكتروني مشتركة بين البنوك الجزائرية", "بطاقة SIM", "بطاقة علاج"], correctAnswerIndex: 1 },
+{ question: "ما هو 'بريدي موب'؟", answers: ["تطبيق دفع إلكتروني تابع لبريد الجزائر", "خدمة توصيل سريع", "بنك إلكتروني", "شبكة واي فاي عمومية"], correctAnswerIndex: 0 },
+{ question: "ما هو دور 'CERIST' (مركز البحث في الإعلام العلمي والتقني)؟", answers: ["إدارة نطاق الإنترنت .dz وتوفير خدمات بحثية", "صناعة الحواسيب", "تطوير ألعاب الفيديو", "مراقبة الإنترنت"], correctAnswerIndex: 0 },
+{ question: "ما هو 'الحراك التقني' (Tech Hirak) الذي ظهر في السنوات الأخيرة؟", answers: ["حركة احتجاجية", "مصطلح يصف نهضة الشركات الناشئة والمطورين في الجزائر", "مشروع حكومي", "شركة تكنولوجيا"], correctAnswerIndex: 1 },
+{ question: "ما هو 'فيبر أوبتيك' (Fibre Optique)؟", answers: ["نوع من الكوابل النحاسية", "تقنية إنترنت فائق السرعة تعتمد على الألياف البصرية", "قمر صناعي", "شبكة 5G"], correctAnswerIndex: 1 },
+
+// --- القانون والانتخابات ---
+{ question: "ما هو السن الأدنى للترشح لرئاسة الجمهورية في الجزائر؟", answers: ["35 سنة", "40 سنة", "45 سنة", "50 سنة"], correctAnswerIndex: 1 },
+{ question: "ما هي 'الحصانة البرلمانية'؟", answers: ["حماية للبرلماني من المتابعة القضائية في قضايا معينة أثناء عهدته", "راتب البرلماني", "مكتب البرلماني", "سيارة البرلماني"], correctAnswerIndex: 0 },
+{ question: "ما هو 'مجلس قضاء'؟", answers: ["محكمة ابتدائية", "هيئة قضائية أعلى من المحكمة وأقل من المحكمة العليا، توجد في كل ولاية", "سجن", "مكتب محامي"], correctAnswerIndex: 1 },
+{ question: "ماذا تعني عبارة 'الحكم غيابياً'؟", answers: ["حكم سري", "إصدار حكم في غياب المتهم", "حكم بالبراءة", "حكم مع وقف التنفيذ"], correctAnswerIndex: 1 },
+{ question: "ما هي 'المحكمة الإدارية'؟", answers: ["محكمة تجارية", "محكمة تفصل في النزاعات التي تكون الدولة أو إحدى هيئاتها طرفاً فيها", "محكمة عسكرية", "محكمة الأسرة"], correctAnswerIndex: 1 },
+{ question: "ما هي 'الفترة الصامتة' في الانتخابات؟", answers: ["فترة التصويت", "الفترة التي يمنع فيها الدعاية الانتخابية قبل يوم الاقتراع", "فترة فرز الأصوات", "فترة الطعون"], correctAnswerIndex: 1 },
+{ question: "ما هو 'النائب العام'؟", answers: ["محامي الدولة", "قاضي يمثل الحق العام والمجتمع أمام القضاء", "رئيس المحكمة", "وزير العدل"], correctAnswerIndex: 1 },
+{ question: "ما هو 'التزوير واستعمال المزور' في القانون؟", answers: ["جريمة سرقة", "جريمة تغيير الحقيقة في محرر رسمي واستخدامه", "جريمة نصب", "جريمة خيانة أمانة"], correctAnswerIndex: 1 },
+{ question: "ما هي 'هيئة المحامين'؟", answers: ["نقابة أو منظمة مهنية تدافع عن المحامين وتنظم المهنة", "محكمة خاصة", "مدرسة لتكوين المحامين", "مكتب محاماة كبير"], correctAnswerIndex: 0 },
+{ question: "ما هي أول انتخابات رئاسية تعددية جرت في الجزائر؟", answers: ["1989", "1991", "1995", "1999"], correctAnswerIndex: 2 },
+
+// --- أسئلة ختامية متنوعة ---
+{ question: "ما هي 'الڨصبة' كآلة موسيقية؟", answers: ["آلة وترية", "آلة إيقاعية", "آلة نفخ تقليدية مصنوعة من القصب", "طبل كبير"], correctAnswerIndex: 2 },
+{ question: "من هو 'علي لابوانت'؟", answers: ["قائد سياسي", "شهيد من شهداء معركة الجزائر وأحد أبطالها", "رياضي", "فنان"], correctAnswerIndex: 1 },
+{ question: "ما هو 'مقام الشهيد' (رياض الفتح)؟", answers: ["متحف", "مسجد كبير", "نصب تذكاري يخلد شهداء الثورة التحريرية", "قصر مؤتمرات"], correctAnswerIndex: 2 },
+{ question: "ما هو 'الخبز المطلوع'؟", answers: ["خبز فرنسي", "خبز تقليدي يطهى في فرن طيني (طاجين)", "خبز محشو", "خبز حلو"], correctAnswerIndex: 1 },
+{ question: "ما هي 'الشركة الوطنية للملاحة البحرية' (CNAN)؟", answers: ["شركة لإدارة الموانئ", "شركة جزائرية للنقل البحري للبضائع والمسافرين", "شركة لصيد الأسماك", "شركة لبناء السفن"], correctAnswerIndex: 1 },
+{ question: "ما هو 'الفيمو' (FIMO) الذي كان يستخدم في التسعينيات؟", answers: ["نوع من الأسلحة", "جهاز اتصال لاسلكي استخدمته قوات الأمن", "سيارة عسكرية", "شفرة سرية"], correctAnswerIndex: 1 },
+{ question: "ما هي 'دار الأوبرا' في الجزائر؟", answers: ["لا توجد", "توجد في وهران", "توجد في الجزائر العاصمة (أوبرا بوعلام بسايح)", "توجد في قسنطينة"], correctAnswerIndex: 2 },
+{ question: "ما هي 'الجلسة' في المحكمة؟", answers: ["فترة استراحة القاضي", "المرحلة العلنية التي يتم فيها الاستماع للأطراف وإصدار الحكم", "مكتب القاضي", "أرشيف المحكمة"], correctAnswerIndex: 1 },
+{ question: "من هو 'الشيخ بوعمامة'؟", answers: ["زعيم مقاومة شعبية شهيرة في الجنوب الغربي الجزائري", "مغني بدوي", "ولي صالح", "مؤسس زاوية"], correctAnswerIndex: 0 },
+{ question: "ما هو 'الفيرميسال' في المطبخ الجزائري؟", answers: ["نوع من التوابل", "الشعيرية الرقيقة المستخدمة في الحساء (الشوربة)", "نوع من الأرز", "نوع من الخضار"], correctAnswerIndex: 1 },
+{ question: "ما هي 'النون' في مسلسل 'الدامة'؟", answers: ["اسم البطلة", "اسم الحي الشعبي", "لعبة الداما", "مبلغ مالي"], correctAnswerIndex: 0 },
+{ question: "ما هو 'التيسان' (Tisane)؟", answers: ["قهوة", "شاي", "مشروب أعشاب مهدئ", "عصير"], correctAnswerIndex: 2 },
+{ question: "ما هي 'الخطبة' في التقاليد الجزائرية؟", answers: ["عقد الزواج", "الطلب الرسمي للزواج و قراءة الفاتحة", "حفل الزفاف", "فترة التعارف"], correctAnswerIndex: 1 },
+{ question: "من هو 'سفيان فيغولي'؟", answers: ["لاعب كرة يد", "لاعب كرة قدم دولي جزائري", "عداء", "ملاكم"], correctAnswerIndex: 1 },
+{ question: "ما هي 'الزلابية'؟", answers: ["حلوى معسلة مقلية تشتهر بها بوفاريك في رمضان", "طبق مالح", "مشروب", "خبز"], correctAnswerIndex: 0 },
+
+
+// --- المرأة الجزائرية ---
+{ question: "من هي أول امرأة جزائرية وعربية تقود طائرة حربية؟", answers: ["لويزة حنون", "نادية آيت زاي", "رشيدة بلقاسم", "لا توجد معلومات دقيقة"], correctAnswerIndex: 2 },
+{ question: "ما هو تاريخ الاحتفال باليوم العالمي للمرأة والذي يعد عطلة في الجزائر؟", answers: ["8 مارس", "1 مايو", "19 مارس", "27 سبتمبر"], correctAnswerIndex: 0 },
+{ question: "من هي أول امرأة تم تعيينها في منصب 'والي' في الجزائر؟", answers: ["لويزة حنون", "خليدة تومي", "سكينة نفيسة حمود", "لا يوجد تعيين رسمي"], correctAnswerIndex: 2 },
+{ question: "من هي المجاهدة التي كانت جزءاً من 'شبكة بومباي' في معركة الجزائر؟", answers: ["جميلة بوحيرد", "زهرة ظريف بيطاط", "حسيبة بن بوعلي", "كل ما سبق"], correctAnswerIndex: 3 },
+{ question: "ما هو 'الكاراكو العاصمي' الذي يعتبر رمزاً لأناقة المرأة الجزائرية؟", answers: ["فستان سهرة", "لباس تقليدي فاخر يتكون من قطعتين", "عباءة يومية", "غطاء للرأس"], correctAnswerIndex: 1 },
+{ question: "من هي الكاتبة التي تعتبر من رائدات الأدب النسوي الجزائري باللغة الفرنسية؟", answers: ["آسيا جبار", "أحلام مستغانمي", "زهور ونيسي", "جميلة زنير"], correctAnswerIndex: 0 },
+{ question: "ما هو دور المرأة في 'التويزة'؟", answers: ["لا تشارك", "تحضير الطعام والزغاريد", "المشاركة في العمل جنباً إلى جنب مع الرجل", "الإشراف فقط"], correctAnswerIndex: 1 },
+{ question: "من هي أول امرأة تترأس حزباً سياسياً في الجزائر؟", answers: ["نعيمة صالحي", "لويزة حنون", "خليدة تومي", "فاطمة الزهراء زرواطي"], correctAnswerIndex: 1 },
+{ question: "ما هو القانون الذي يحدد حقوق وواجبات المرأة في إطار الأسرة؟", answers: ["القانون التجاري", "قانون العقوبات", "قانون الأسرة", "القانون المدني"], correctAnswerIndex: 2 },
+{ question: "من هي البطلة الأولمبية التي ألهمت جيلاً من الرياضيات الجزائريات؟", answers: ["سليمة سواكري", "حسيبة بولمرقة", "نورية بنيدة مراح", "صورايا حداد"], correctAnswerIndex: 1 },
+
+// --- الرجل الجزائري ---
+{ question: "ما هو اللباس التقليدي للرجل في منطقة الطوارق؟", answers: ["القشابية والبرنوس", "الجبادور", "الشاش (التڨلموست) والسروال الفضفاض", "البدلة الأوروبية"], correctAnswerIndex: 2 },
+{ question: "ما هي الصفة التي غالباً ما ترتبط بالرجل الجزائري في الثقافة الشعبية؟", answers: ["البرود", "الخجل", "النيف (الأنفة وعزة النفس)", "اللامبالاة"], correctAnswerIndex: 2 },
+{ question: "ما هو دور الرجل الأساسي في حفل الزفاف التقليدي؟", answers: ["الطهي", "تزيين المنزل", "استقبال الضيوف والمسؤولية عن الوليمة", "لا دور له"], correctAnswerIndex: 2 },
+{ question: "ما هو الاسم الذي يطلق على الرجل الذي أدى فريضة الحج؟", answers: ["الشيخ", "المعلم", "الحاج", "السيد"], correctAnswerIndex: 2 },
+{ question: "من هو 'شيخ' القبيلة أو 'العرش' قديماً؟", answers: ["أغنى رجل", "أكبر رجل سناً وحكمة", "أقوى رجل", "الكاهن"], correctAnswerIndex: 1 },
+{ question: "ما هي اللعبة الشعبية التي يمارسها الرجال بكثرة في المقاهي الجزائرية؟", answers: ["الشطرنج", "الدومينو والورق (الروندا)", "البلياردو", "ألعاب الفيديو"], correctAnswerIndex: 1 },
+{ question: "ما هو 'البرنوس' الذي يرتديه الرجل الجزائري؟", answers: ["قبعة", "سروال", "عباءة فاخرة من الصوف أو وبر الجمل", "حذاء"], correctAnswerIndex: 2 },
+{ question: "من هو 'عمي' في اللهجة الجزائرية؟", answers: ["العم فقط", "كلمة احترام تقال للرجل الكبير في السن", "الخال", "الجد"], correctAnswerIndex: 1 },
+{ question: "ما هي الرياضة الأكثر شعبية بين الرجال في الجزائر؟", answers: ["كرة اليد", "ألعاب القوى", "كرة القدم", "الملاكمة"], correctAnswerIndex: 2 },
+{ question: "ما هو المكان الذي يعتبر ملتقى اجتماعياً للرجال في الأحياء الشعبية؟", answers: ["المكتبة", "الحديقة العامة", "المقهى", "النادي الرياضي"], correctAnswerIndex: 2 },
+
+// --- تفاصيل تاريخية وجغرافية دقيقة ---
+{ question: "ما اسم العملية العسكرية التي حاول فيها شارل الخامس احتلال الجزائر عام 1541 وفشلت؟", answers: ["حملة الجزائر", "معركة ليبانتو", "غزوة الجزائر", "عاصفة الجزائر"], correctAnswerIndex: 0 },
+{ question: "من هو الداي الذي اشتهر بقوته وفرض سيطرة الجزائر على حوض المتوسط؟", answers: ["بابا علي", "محمد بن عثمان", "حسين داي", "علي بتشين"], correctAnswerIndex: 1 },
+{ question: "ما هي 'المنظمة الخاصة' (OS) التي كانت الجناح العسكري لحركة انتصار الحريات الديمقراطية؟", answers: ["منظمة سرية للتحضير للثورة المسلحة", "منظمة طلابية", "منظمة رياضية", "منظمة خيرية"], correctAnswerIndex: 0 },
+{ question: "ما هو الاسم الذي أطلقه الفرنسيون على مدينة 'بشار'؟", answers: ["سانت آرنو", "كولومب بشار", "فيكتور هوغو", "لامبير"], correctAnswerIndex: 1 },
+{ question: "ما هي 'أزمة صيف 1962'؟", answers: ["أزمة دبلوماسية مع فرنسا", "صراع على السلطة بين قادة الثورة بعد الاستقلال", "أزمة اقتصادية حادة", "موجة جفاف"], correctAnswerIndex: 1 },
+{ question: "ما هي 'مظاهرات 11 ديسمبر 1960'؟", answers: ["مظاهرات تطالب بالاستقلال خرجت لتحدي ديغول", "مظاهرات ضد الحكومة المؤقتة", "مظاهرات للمطالبة بالخبز", "مظاهرات لدعم فرنسا"], correctAnswerIndex: 0 },
+{ question: "ما هو 'مشروع قسنطينة' الذي أطلقه ديغول؟", answers: ["مشروع عسكري", "مشروع تنموي لإغراء الجزائريين وفصلهم عن الثورة", "مشروع تقسيم الجزائر", "مشروع ثقافي"], correctAnswerIndex: 1 },
+{ question: "من هو القائد الروماني الذي هزم الملك يوغرطة؟", answers: ["يوليوس قيصر", "بومبيوس", "ماريوس", "سولا"], correctAnswerIndex: 2 },
+{ question: "ما هي 'معركة الجرف' (1955) التي تعتبر من كبرى معارك الثورة؟", answers: ["معركة بحرية", "معركة في الأوراس تكبد فيها العدو خسائر فادحة", "معركة في المدن", "معركة جوية"], correctAnswerIndex: 1 },
+{ question: "ما هي 'مذابح سطيف، قالمة وخراطة'؟", answers: ["مذابح ارتكبها الاستعمار الفرنسي ضد متظاهرين جزائريين في 8 ماي 1945", "مذابح بين الجزائريين", "مذابح خلال العشرية السوداء", "مذابح في العهد العثماني"], correctAnswerIndex: 0 },
+{ question: "أين تقع 'الحمادة'؟", answers: ["نوع من السهول الساحلية", "هضبة صخرية قاحلة في الصحراء", "منطقة جبلية خضراء", "بحيرة مالحة"], correctAnswerIndex: 1 },
+{ question: "ما هو 'العرق' في جغرافيا الصحراء؟", answers: ["واد جاف", "منطقة صخرية", "مساحات واسعة من الكثبان الرملية", "واحة نخيل"], correctAnswerIndex: 2 },
+{ question: "ما هي 'حرب الرمال'؟", answers: ["حرب أهلية", "صراع عسكري بين الجزائر والمغرب عام 1963", "اسم معركة في الثورة", "حرب ضد الإرهاب"], correctAnswerIndex: 1 },
+{ question: "من هو 'الباي' الذي بنى قصر أحمد باي في قسنطينة؟", answers: ["صالح باي", "حسين باي", "أحمد باي بن محمد الشريف", "إبراهيم باي"], correctAnswerIndex: 2 },
+{ question: "ما هي 'غابة أكفادو'؟", answers: ["غابة نخيل في الصحراء", "أكبر غابة في منطقة القبائل تشتهر بأشجارها الكثيفة", "غابة صنوبر في الساحل", "غابة أرز في الأطلس"], correctAnswerIndex: 1 },
+// --- الدفعة السابعة: لهجة، صناعة تقليدية، بيئة ومناخ، وتفاصيل متنوعة (100 سؤال) ---
+// --- اللهجة والمصطلحات الجزائرية ---
+{ question: "ماذا تعني كلمة 'البريّة' في اللهجة الجزائرية؟", answers: ["المدينة", "الرسالة الخطية", "الريف أو الخلاء", "السيارة"], correctAnswerIndex: 2 },
+{ question: "عندما يقول شخص 'راني زعفان'، ماذا يعني؟", answers: ["أنا سعيد", "أنا متعب", "أنا غاضب", "أنا جائع"], correctAnswerIndex: 2 },
+{ question: "ما هو 'التابوري'؟", answers: ["الطاولة", "الكرسي الصغير (stool)", "السرير", "الخزانة"], correctAnswerIndex: 1 },
+{ question: "ماذا تعني كلمة 'مقلق' باللهجة الجزائرية؟", answers: ["مضحك", "مزعج أو قلق", "سريع", "بطيء"], correctAnswerIndex: 1 },
+{ question: "ماذا يقصد الجزائري بكلمة 'يشد'؟", answers: ["يترك", "يضحك", "يمسك", "يذهب"], correctAnswerIndex: 2 },
+{ question: "ما هي 'الشكارة'؟", answers: ["الحقيبة أو الكيس البلاستيكي", "السيارة", "النافذة", "الطاولة"], correctAnswerIndex: 0 },
+{ question: "ما معنى 'نوض'؟", answers: ["اجلس", "نم", "انهض", "كل"], correctAnswerIndex: 2 },
+{ question: "ماذا تعني كلمة 'يهبل'؟", answers: ["إنه سيء جداً", "إنه ممل", "إنه رائع جداً (أو يسبب الجنون)", "إنه هادئ"], correctAnswerIndex: 2 },
+{ question: "ما هو 'الفرشيطة'؟", answers: ["الملعقة", "السكين", "الصحن", "الشوكة"], correctAnswerIndex: 3 },
+{ question: "كلمة 'الخدمة' تعني:", answers: ["الراحة", "النوم", "العمل", "الأكل"], correctAnswerIndex: 2 },
+{ question: "ماذا تعني عبارة 'شحال'؟", answers: ["أين", "متى", "كيف", "كم"], correctAnswerIndex: 3 },
+{ question: "ما هو 'البيدون'؟", answers: ["القارورة", "الكأس", "الدلو أو الصفيح", "الصحن"], correctAnswerIndex: 2 },
+{ question: "ماذا يعني فعل 'يستيكي'؟", answers: ["يعتقد أو يظن", "يصلح", "يشتري", "ينظف"], correctAnswerIndex: 0 },
+{ question: "ماذا يقصد بكلمة 'الفيشطة'؟", answers: ["الحفل أو السهرة", "المشكلة", "الهدية", "الرحلة"], correctAnswerIndex: 0 },
+{ question: "ما هي 'الزردة'؟", answers: ["مشاجرة", "رحلة مدرسية", "وليمة كبيرة أو احتفال", "لعبة شعبية"], correctAnswerIndex: 2 },
+{ question: "ماذا تعني كلمة 'حاب'؟", answers: ["يكره", "يريد", "يملك", "يعرف"], correctAnswerIndex: 1 },
+{ question: "ما هو 'الموس'؟", answers: ["الشوكة", "الملعقة", "السكين", "الكأس"], correctAnswerIndex: 2 },
+{ question: "عندما يقول شخص 'راني عيان'، ماذا يعني؟", answers: ["أنا بخير", "أنا متعب", "أنا قوي", "أنا مريض"], correctAnswerIndex: 1 },
+{ question: "ماذا تعني كلمة 'بنين'؟", answers: ["مالح", "حلو", "لذيذ", "مر"], correctAnswerIndex: 2 },
+{ question: "ماذا تعني عبارة 'بالاك'؟", answers: ["تفضل", "بالتأكيد", "ربما", "احذر / انتبه"], correctAnswerIndex: 3 },
+
+// --- الصناعة التقليدية والحرف ---
+{ question: "ما هي الولاية التي تشتهر بصناعة 'فخار بوركبة'؟", answers: ["تيزي وزو", "مستغانم", "جيجل", "سكيكدة"], correctAnswerIndex: 1 },
+{ question: "ما هي المادة الأساسية المستخدمة في صناعة الحلي التقليدية في منطقة الطوارق؟", answers: ["الذهب", "النحاس", "الفضة", "البرونز"], correctAnswerIndex: 2 },
+{ question: "أين تقع 'قرية الفخارين' الشهيرة في منطقة القبائل؟", answers: ["معاتقة", "الأربعاء نايث إيراثن", "عين الحمام", "تيزي وزو"], correctAnswerIndex: 0 },
+{ question: "ما هي صناعة 'السروجية'؟", answers: ["صناعة السجاد", "صناعة سروج الخيل الجلدية المزخرفة", "صناعة السيوف", "صناعة الفخار"], correctAnswerIndex: 1 },
+{ question: "بماذا تشتهر مدينة 'دلس' في ولاية بومرداس؟", answers: ["صناعة السفن الخشبية التقليدية", "صناعة الزجاج", "صناعة الورق", "صناعة الحرير"], correctAnswerIndex: 0 },
+{ question: "ما هي 'الزربية'؟", answers: ["لباس تقليدي", "أداة مطبخ", "السجادة التقليدية المنسوجة يدوياً", "حلوى"], correctAnswerIndex: 2 },
+{ question: "ما هي الولاية التي تعتبر عاصمة 'النحاس المطروق'؟", answers: ["تلمسان", "الجزائر العاصمة", "قسنطينة", "غرداية"], correctAnswerIndex: 2 },
+{ question: "ما هي المادة الأولية لصناعة 'القشابية' الوبرية؟", answers: ["صوف الخروف", "وبر الجمل", "الحرير", "القطن"], correctAnswerIndex: 1 },
+{ question: "ما هي 'الجبة القبائلية'؟", answers: ["فستان تقليدي للمرأة في منطقة القبائل", "غطاء للرأس", "سروال رجالي", "طبق طعام"], correctAnswerIndex: 0 },
+{ question: "ما هي الحرفة التي تعتمد على أوراق 'نخيل الدوم'؟", answers: ["صناعة الفخار", "صناعة السلال والقبعات (الدنانة)", "صناعة الورق", "النسيج"], correctAnswerIndex: 1 },
+
+// --- البيئة والمناخ ---
+{ question: "ما هو المناخ السائد في شمال الجزائر (المنطقة الساحلية)؟", answers: ["مناخ صحراوي", "مناخ قاري", "مناخ البحر الأبيض المتوسط", "مناخ استوائي"], correctAnswerIndex: 2 },
+{ question: "ما هو أكبر منتزه وطني في الجزائر؟", answers: ["منتزه جرجرة الوطني", "منتزه ثنية الحد", "منتزه الطاسيلي ناجر الثقافي", "منتزه قورايا"], correctAnswerIndex: 2 },
+{ question: "ما هو الطائر الذي يعتبر رمزاً للجزائر وتم استخدامه في شعار الخطوط الجوية سابقاً؟", answers: ["السنونو", "النسر", "اللقلق الأبيض", "الحسون"], correctAnswerIndex: 0 },
+{ question: "ما هي محمية 'المحيط الحيوي' التي تقع بين ولايتي تيزي وزو وبجاية؟", answers: ["محمية القالة", "محمية جرجرة", "محمية تلمسان", "محمية الشريعة"], correctAnswerIndex: 1 },
+{ question: "ما هو 'السد الأخضر'؟", answers: ["سد مائي كبير", "مشروع تشجير ضخم لوقف زحف الرمال", "حديقة وطنية", "مشروع للطاقة المتجددة"], correctAnswerIndex: 1 },
+{ question: "ما هو الحيوان الذي يُعرف بـ'سفينة الصحراء'؟", answers: ["الحصان", "الغزال", "الجمل", "الفنك"], correctAnswerIndex: 2 },
+{ question: "أين تعيش قردة 'المكاك البربري' (أو زعطوط) في الجزائر؟", answers: ["الصحراء", "غابات الشمال مثل جرجرة والشريعة", "السهوب", "المناطق الساحلية"], correctAnswerIndex: 1 },
+{ question: "ما هي الولاية التي تضم 'بحيرة الطيور' المصنفة ضمن اتفاقية رامسار؟", answers: ["عنابة", "سكيكدة", "جيجل", "الطارف"], correctAnswerIndex: 3 },
+{ question: "ما هو 'غزال دوركاس'؟", answers: ["نوع من الظباء يعيش في الصحراء الجزائرية", "طائر مهاجر", "سمك نهري", "نبات صحراوي"], correctAnswerIndex: 0 },
+{ question: "ما هي المشكلة البيئية الرئيسية التي تهدد الواحات في الصحراء؟", answers: ["التلوث الصناعي", "التصحر وزحف الرمال", "الفيضانات", "الصيد الجائر"], correctAnswerIndex: 1 },
+
+// --- تفاصيل متنوعة ---
+{ question: "ما هو لون العلم الجزائري؟", answers: ["أخضر وأبيض يتوسطهما هلال ونجمة حمراوان", "أحمر وأبيض وأخضر", "أخضر وأحمر", "أبيض وأسود وأخضر"], correctAnswerIndex: 0 },
+{ question: "ما هو رقم الولاية الذي يظهر على لوحات ترقيم السيارات في العاصمة؟", answers: ["01", "09", "16", "31"], correctAnswerIndex: 2 },
+{ question: "من هو مؤلف موسيقى النشيد الوطني الجزائري 'قسماً'؟", answers: ["محمد فوزي", "محمد عبد الوهاب", "رياض السنباطي", "علي معاشي"], correctAnswerIndex: 0 },
+{ question: "ما هو 'يناير' الذي يحتفل به الجزائريون؟", answers: ["عيد الحصاد", "رأس السنة الأمازيغية", "عيد الربيع", "ذكرى ثورة"], correctAnswerIndex: 1 },
+{ question: "ما هي أكلة 'البربوشة'؟", answers: ["الاسم الآخر للكسكس في بعض المناطق", "نوع من الحساء", "حلوى", "خبز"], correctAnswerIndex: 0 },
+{ question: "ما هو المتحف الوطني للفنون الجميلة؟", answers: ["متحف يعرض الآثار الرومانية", "أكبر متحف فني في إفريقيا والمغرب العربي", "متحف للجيش", "متحف للتاريخ الطبيعي"], correctAnswerIndex: 1 },
+{ question: "في أي ولاية يقع 'جبل الوحش'؟", answers: ["سطيف", "عنابة", "سكيكدة", "قسنطينة"], correctAnswerIndex: 3 },
+{ question: "ما هي 'البطاقة الذهبية'؟", answers: ["بطاقة هوية", "بطاقة بنكية تابعة لبريد الجزائر", "بطاقة مشجع رياضي", "بطاقة علاج"], correctAnswerIndex: 1 },
+{ question: "ما هي 'الديوانه'؟", answers: ["الشرطة", "الدرك", "الجمارك", "الجيش"], correctAnswerIndex: 2 },
+{ question: "ما هي الأكلة التي تقدم تقليدياً للضيوف مع الشاي في منطقة الصحراء؟", answers: ["الكسكس", "التمر واللبن", "الخبز والزبدة", "المكسرات"], correctAnswerIndex: 1 },
+{ question: "من هو 'الشيخRaymond' الذي كان أستاذاً كبيراً في موسيقى المالوف؟", answers: ["موسيقي مسلم", "موسيقي يهودي جزائري", "موسيقي فرنسي", "موسيقي تركي"], correctAnswerIndex: 1 },
+{ question: "ما هي المدينة التي كانت تسمى 'بونة'؟", answers: ["سكيكدة", "عنابة", "قالمة", "جيجل"], correctAnswerIndex: 1 },
+{ question: "ما هو 'التبراح' في الأعراس؟", answers: ["الرقص", "الغناء بصوت عالٍ لمدح أهل العرس وتقديم الهدايا", "الطهي", "الزغاريد"], correctAnswerIndex: 1 },
+{ question: "ما هو 'المحاجب'؟", answers: ["نوع من الحلوى", "فطائر رقيقة محشوة بالبصل والطماطم", "حساء", "خبز"], correctAnswerIndex: 1 },
+{ question: "ما هي الولاية التي تلقب بـ 'عاصمة الكورنيش'؟", answers: ["وهران", "بجاية", "جيجل", "تيبازة"], correctAnswerIndex: 2 },
+// --- الدفعة الثامنة: أسئلة متقدمة وصعبة وتفاصيل دقيقة (100 سؤال) ---
+// --- تفاصيل تاريخية متقدمة ---
+{ question: "من هو قائد 'ثورة أولاد سيدي الشيخ' في الغرب الجزائري ضد الاستعمار الفرنسي؟", answers: ["الشيخ بوعمامة", "سي سليمان بن حمزة", "محمد المقراني", "الشريف بوبغلة"], correctAnswerIndex: 1 },
+{ question: "ما هي 'قضية الأقدام السوداء' بعد استقلال الجزائر؟", answers: ["نزاع حدودي", "عودة المعمرين الأوروبيين إلى فرنسا", "قضية ديون", "نزاع رياضي"], correctAnswerIndex: 1 },
+{ question: "من هو الضابط الفرنسي الذي قاد 'الفرقة الإدارية الخاصة' (SAS) لقمع الثورة؟", answers: ["الجنرال ماسو", "الجنرال سالان", "الكولونيل بيجار", "كل هؤلاء شاركوا"], correctAnswerIndex: 3 },
+{ question: "ما هي 'مجموعة وجدة' أو 'جيش الحدود' في تاريخ الثورة؟", answers: ["مجموعة من الهاربين من الجيش الفرنسي", "قيادة أركان جيش التحرير المتمركزة على الحدود المغربية بقيادة بومدين", "فرقة كوماندوس خاصة", "مجموعة من الدبلوماسيين"], correctAnswerIndex: 1 },
+{ question: "من هو الرئيس الجزائري الذي أقر 'قانون الوئام المدني'؟", answers: ["الشاذلي بن جديد", "محمد بوضياف", "اليمين زروال", "عبد العزيز بوتفليقة"], correctAnswerIndex: 2 },
+{ question: "ما هي 'أحداث أكتوبر 1988'؟", answers: ["احتجاجات شعبية واسعة أدت إلى نهاية نظام الحزب الواحد", "محاولة انقلاب فاشلة", "أزمة اقتصادية", "انتخابات رئاسية"], correctAnswerIndex: 0 },
+{ question: "من هو المؤرخ الفرنسي الذي كان صديقاً للثورة الجزائرية وكتب عنها كثيراً؟", answers: ["فرناند بروديل", "بيير فيدال-ناكيه", "جاك لوغوف", "جورج دوبي"], correctAnswerIndex: 1 },
+{ question: "ما هو 'تلفزيون الأقدام السوداء' الذي كان يبث من فرنسا؟", answers: ["قناة لدعم الثورة", "قناة معادية لاستقلال الجزائر", "قناة ثقافية", "قناة رياضية"], correctAnswerIndex: 1 },
+{ question: "من هو 'الداي حسين'؟", answers: ["داي حارب إسبانيا", "آخر دايات الجزائر الذي وقع على وثيقة الاستسلام للفرنسيين", "داي بنى جامع كتشاوة", "داي حارب أمريكا"], correctAnswerIndex: 1 },
+{ question: "ما هي 'حرب الدايات' التي خاضتها الجزائر ضد الولايات المتحدة في بداية القرن التاسع عشر؟", answers: ["حرب بسبب الديون", "حرب للسيطرة على التجارة في المتوسط (حرب البربر)", "حرب حدودية", "حرب دينية"], correctAnswerIndex: 1 },
+
+
+// --- المخترعون والعلماء ---
+{ question: "من هو العالم الجزائري الذي يوصف بأنه 'العربي الأكثر اختراعاً' ويملك آلاف براءات الاختراع في الإلكترونيات الدقيقة؟", answers: ["نور الدين مليكشي", "بلقاسم حبة", "إلياس زرهوني", "توفيق مخلوفي"], correctAnswerIndex: 1 },
+{ question: "من هو الطبيب الجزائري الذي ترأس 'معاهد الصحة الوطنية الأمريكية' (NIH)، وهي من أكبر مؤسسات البحث الطبي في العالم؟", answers: ["إلياس زرهوني", "سليم نڨادي", "محمد الصغير بناني", "عبد المجيد سحنون"], correctAnswerIndex: 0 },
+{ question: "ما هو مجال تخصص البروفيسور 'كمال يوسف تومي' في معهد ماساتشوستس للتكنولوجيا (MIT)؟", answers: ["الفيزياء النووية", "علم الروبوتات والتحكم الآلي", "الذكاء الاصطناعي", "علوم الفضاء"], correctAnswerIndex: 1 },
+{ question: "من هو الفيزيائي الجزائري الذي كان عضواً في الفريق الذي اكتشف 'بوزون هيغز' في 'سيرن'؟", answers: ["أحمد جيطلي", "زهير قارة", "رشيد حاليم", "كلهم شاركوا"], correctAnswerIndex: 0 },
+{ question: "ما هو الاختراع الذي ينسب للبروفيسور بلقاسم حبة وساهم في تصغير حجم الهواتف والكاميرات؟", answers: ["شريحة الـ GPS", "تقنية الـ 3D-IC لتوصيل الشرائح", "بطارية الليثيوم", "شاشة اللمس"], correctAnswerIndex: 1 },
+{ question: "من هو الباحث الجزائري الذي طور طريقة للكشف المبكر عن سرطان القولون باستخدام الليزر؟", answers: ["مسعود حمايدي", "عبد القادر حساني", "جمال ميموني", "محمد بورنان"], correctAnswerIndex: 0 },
+{ question: "في أي جامعة أمريكية يشغل 'نور الدين مليكشي' منصب عميد كلية العلوم والتكنولوجيا؟", answers: ["هارفارد", "ستانفورد", "ديلاوير", "MIT"], correctAnswerIndex: 2 },
+{ question: "من هو العالم الجزائري الذي ساهم في تطوير الجيل الخامس (5G) للاتصالات؟", answers: ["مراد بدير", "محمد بجاوي", "إسماعيل العمري", "كل ما سبق"], correctAnswerIndex: 0 },
+{ question: "ما هو اسم أول قمر صناعي جزائري تم تصنيعه بخبرات محلية في مركز تطوير الأقمار الصناعية بوهران؟", answers: ["Alcomsat-1", "Alsat-1N", "Alsat-2B", "Alsat-Micro"], correctAnswerIndex: 3 },
+{ question: "من هو الجراح الجزائري الذي أجرى أول عملية زرع كبد من متبرع حي في الجزائر؟", answers: ["فريد شعال", "كمال بوزيد", "خير الدين بوالشحم", "عبد الرزاق بوعصيدة"], correctAnswerIndex: 2 },
+
+// --- التراث غير المادي والتقاليد ---
+{ question: "ما هو 'أهليل قورارة'، المصنف كتراث عالمي من طرف اليونسكو؟", answers: ["نوع من الشعر والموسيقى الصوفية", "لباس تقليدي", "طبق طعام", "احتفال زواج"], correctAnswerIndex: 0 },
+{ question: "ما هو تقليد 'سبيبة' الذي يقام في جانت ويصنف كتراث عالمي؟", answers: ["سباق خيل", "احتفال بانتهاء حرب أهلية قديمة بين قبيلتين", "مهرجان التمور", "موسم الحصاد"], correctAnswerIndex: 1 },
+{ question: "ما هو 'الكاراكو الجزائري'؟", answers: ["لباس تقليدي عاصمي للمرأة", "نوع من الحلي الفضية", "حذاء جلدي", "غطاء رأس"], correctAnswerIndex: 0 },
+{ question: "ما هي 'الشدة التلمسانية' المصنفة ضمن التراث العالمي؟", answers: ["رقصة شعبية", "لباس العروس التقليدي", "أغنية تراثية", "قصة شعبية"], correctAnswerIndex: 1 },
+{ question: "ما هو 'البرنوس'؟", answers: ["سروال فضفاض", "عباءة رجالية من الصوف أو الوبر", "قبعة تقليدية", "وشاح للكتف"], correctAnswerIndex: 1 },
+{ question: "ما هي 'التويزة' في المجتمع الجزائري؟", answers: ["سوق أسبوعي", "عمل تطوعي جماعي للمساعدة", "وليمة عرس", "لعبة أطفال"], correctAnswerIndex: 1 },
+{ question: "ما هي حرفة صناعة 'النحاس المطروق' التي تشتهر بها مدينة قسنطينة؟", answers: ["تشكيل النحاس لإنتاج الأواني والديكور", "صناعة الأسلحة", "سك العملة", "صناعة الآلات الموسيقية"], correctAnswerIndex: 0 },
+{ question: "ماذا يمثل 'الخامسة' أو 'يد فاطمة' في الثقافة الشعبية الجزائرية؟", answers: ["رمز للترحيب", "رمز للحماية من الحسد والعين الشريرة", "رمز للقوة", "رمز للكرم"], correctAnswerIndex: 1 },
+{ question: "ما هو 'المهراس'؟", answers: ["إناء للشرب", "هاون تقليدي من الخشب أو النحاس لسحق التوابل", "فرن طيني", "سلة من الحلفاء"], correctAnswerIndex: 1 },
+{ question: "في أي مناسبة يتم تحضير 'الطمينة' بشكل خاص؟", answers: ["الأعراس", "النجاح في الدراسة", "ولادة مولود جديد", "كل ما سبق"], correctAnswerIndex: 3 },
+{ question: "ما هي 'القشابية'؟", answers: ["لباس صيفي خفيف", "لباس شتوي ثقيل من وبر الجمال أو الصوف", "حذاء تقليدي", "غطاء للرأس"], correctAnswerIndex: 1 },
+{ question: "ما هو 'الحايك'؟", answers: ["قطعة قماش بيضاء طويلة كانت ترتديها النساء لتغطية أجسادهن", "سجادة صلاة", "وشاح ملون", "غطاء للسرير"], correctAnswerIndex: 0 },
+{ question: "ما هو المهرجان السنوي الذي يقام في تمنراست للاحتفال بثقافة الطوارق؟", answers: ["مهرجان تافسيت", "مهرجان سبيبة", "مهرجان أهليل", "مهرجان الجمال"], correctAnswerIndex: 0 },
+{ question: "ما هي 'زربية بابار' التي تشتهر بها منطقة الأوراس؟", answers: ["نوع من الحلويات", "سجادة تقليدية بنقوش أمازيغية", "لباس للمرأة", "قصة شعبية"], correctAnswerIndex: 1 },
+{ question: "ما هو 'البندير'؟", answers: ["آلة نفخ موسيقية", "آلة إيقاعية (دف كبير)", "آلة وترية", "رقصة شعبية"], correctAnswerIndex: 1 },
+
+// --- الدين والزوايا والتصوف ---
+{ question: "ما هو المذهب الفقهي السائد في الجزائر؟", answers: ["المذهب الحنفي", "المذهب الشافعي", "المذهب المالكي", "المذهب الحنبلي"], correctAnswerIndex: 2 },
+{ question: "من هو الولي الصالح الذي يقع ضريحه في قلب الجزائر العاصمة ويعرف بـ 'سيدي عبد الرحمن'؟", answers: ["الثعالبي", "الهواري", "بومدين", "الحراق"], correctAnswerIndex: 0 },
+{ question: "ما هي أشهر زاوية صوفية تأسست في عين ماضي بالأغواط ولها انتشار عالمي؟", answers: ["الزاوية القادرية", "الزاوية الرحمانية", "الزاوية التيجانية", "الزاوية الشاذلية"], correctAnswerIndex: 2 },
+{ question: "في أي ولاية يقع ضريح 'سيدي الهواري' شفيع مدينة وهران؟", answers: ["مستغانم", "وهران", "تلمسان", "عين تموشنت"], correctAnswerIndex: 1 },
+{ question: "ما هو أكبر وأحدث مسجد تم تدشينه في الجزائر وإفريقيا؟", answers: ["المسجد الكبير بتلمسان", "جامع كتشاوة", "مسجد الأمير عبد القادر", "جامع الجزائر (المسجد الأعظم)"], correctAnswerIndex: 3 },
+{ question: "من هو مؤسس 'الزاوية الرحمانية' التي لعبت دوراً كبيراً في مقاومة الاستعمار؟", answers: ["محمد بن عبد الرحمن بوقبرين", "الشيخ الحداد", "محمد المقراني", "بوزيان القلعي"], correctAnswerIndex: 0 },
+{ question: "ما هو مسجد 'كتشاوة' التاريخي في القصبة؟", answers: ["مسجد بني في العهد العثماني ثم حوله الفرنسيون إلى كاتدرائية", "أقدم مسجد في الجزائر", "أكبر مسجد في الجزائر", "مسجد بناه الموحدون"], correctAnswerIndex: 0 },
+{ question: "ما هو الاسم الذي يطلق على رحلة الحجاج الجزائريين قديماً إلى مكة؟", answers: ["الركب", "القافلة", "المحمل", "السفرة"], correctAnswerIndex: 0 },
+{ question: "من هو الولي الصالح الذي ينسب إليه اسم ولاية 'سيدي بلعباس'؟", answers: ["سيدي بلعباس البوزيدي", "سيدي بلعباس السبتي", "سيدي بلعباس الوهراني", "سيدي بلعباس المعسكري"], correctAnswerIndex: 0 },
+{ question: "ما هو دور الزوايا تاريخياً في الجزائر إلى جانب التعليم الديني؟", answers: ["القضاء والفصل في النزاعات", "الحفاظ على الهوية الوطنية", "نقطة انطلاق للثورات الشعبية", "كل ما سبق"], correctAnswerIndex: 3 },
+
+// --- أسئلة متنوعة إضافية ---
+{ question: "ما هو الاسم القديم لمدينة 'قالمة'؟", answers: ["طاغاست", "مادور", "كلاما", "هيبون"], correctAnswerIndex: 2 },
+{ question: "من هو الرسام الجزائري الذي اشتهر بلقب 'أبو المنمنمات'؟", answers: ["محمد راسم", "عمر راسم", "بشير يلس", "محمد خدة"], correctAnswerIndex: 0 },
+{ question: "ما هي 'القصبة' المصنفة كتراث عالمي لليونسكو؟", answers: ["قصبة الجزائر", "قصبة قسنطينة", "قصبة دلس", "كل ما سبق صحيح"], correctAnswerIndex: 0 },
+{ question: "من هي الشخصية التي تظهر على ورقة 1000 دينار جزائري؟", answers: ["الأمير عبد القادر", "ماسينيسا", "رموز من التراث و التاسيلي", "هواري بومدين"], correctAnswerIndex: 2 },
+{ question: "ما هي 'البلوزة الوهرانية'؟", answers: ["أغنية شعبية", "لباس تقليدي نسائي في الغرب الجزائري", "رقصة محلية", "حلوى"], correctAnswerIndex: 1 },
+{ question: "من هو الشاعر الذي كتب قصيدة 'من أجلك يا مدينة الصلاة أصلي'؟", answers: ["محمود درويش (أهداها للجزائر)", "مفدي زكريا", "نزار قباني", "أحمد سحنون"], correctAnswerIndex: 0 },
+{ question: "ما هي الصناعة التقليدية التي تشتهر بها مدينة تلمسان؟", answers: ["صناعة الفخار", "صناعة النسيج والقفطان", "صناعة الحلي الفضية", "صناعة السلال"], correctAnswerIndex: 1 },
+{ question: "ما هو الاسم الذي كان يطلق على الجزائر في العهد الروماني؟", answers: ["نوميديا", "موريطانيا القيصرية", "إفريقية الجديدة", "مقاطعة الجزائر"], correctAnswerIndex: 1 },
+{ question: "من هو بطل فيلم 'الشيخ بوعمامة' الذي أخرجه بن عمر بختي؟", answers: ["سيد علي كويرات", "عز الدين مجوبي", "عثمان عريوات", "محمد عجايمي"], correctAnswerIndex: 2 },
+{ question: "ما هو 'آشال'؟", answers: ["لباس صيفي", "حلي فضي يوضع على الرأس في منطقة الأوراس", "آلة موسيقية", "طبق تقليدي"], correctAnswerIndex: 1 },
+// --- الدفعة الخامسة: إعلام، نقل، علاقات دولية، وتفاصيل دقيقة (100 سؤال) ---
+// --- الإعلام والصحافة ---
+{ question: "ما هو الاسم الرسمي لوكالة الأنباء الجزائرية؟", answers: ["و.أ.ج", "APS", "كلاهما صحيح", "وكالة الجزائر للأنباء"], correctAnswerIndex: 2 },
+{ question: "ما هي أول جريدة جزائرية صدرت بعد الاستقلال؟", answers: ["الشعب", "المجاهد", "النصر", "الجمهورية"], correctAnswerIndex: 0 },
+{ question: "ما هي القناة التلفزيونية الجزائرية العمومية الموجهة للجالية بالخارج؟", answers: ["القناة الثالثة", "كنال ألجيري", "قناة الأمازيغية", "قناة المعرفة"], correctAnswerIndex: 1 },
+{ question: "في أي سنة تم فتح قطاع السمعي البصري للقطاع الخاص في الجزائر؟", answers: ["2010", "2012", "2014", "2016"], correctAnswerIndex: 1 },
+{ question: "من هو الصحفي ومقدم الأخبار الذي اشتهر بعبارة 'كما ورد في وكالة الأنباء الجزائرية'؟", answers: ["أحمد لحري", "كريم بوسالم", "عبد القادر جريو", "سليمان بخليلي"], correctAnswerIndex: 0 },
+{ question: "ما اسم أول قناة تلفزيونية خاصة انطلقت في الجزائر؟", answers: ["النهار TV", "الشروق TV", "البلاد TV", "دزاير TV"], correctAnswerIndex: 1 },
+{ question: "ما هي الهيئة المكلفة بضبط قطاع السمعي البصري في الجزائر؟", answers: ["وزارة الاتصال", "سلطة ضبط السمعي البصري (ARAV)", "مجلس أخلاقيات المهنة", "البرلمان"], correctAnswerIndex: 1 },
+{ question: "ما هو اسم أقدم جريدة يومية ناطقة بالفرنسية لا تزال تصدر في الجزائر؟", answers: ["Le Soir d'Algérie", "El Watan", "El Moudjahid", "Liberté"], correctAnswerIndex: 2 },
+{ question: "من هو مقدم برنامج 'خاتم سليمان' الثقافي الشهير؟", answers: ["سليمان بخليلي", "جورج قرداحي", "عبد القادر جريو", "لحبيب بن علي"], correctAnswerIndex: 0 },
+{ question: "ما هي الإذاعة الوطنية التي تبث برامجها باللغة الفرنسية؟", answers: ["القناة الأولى", "القناة الثانية", "القناة الثالثة", "إذاعة البهجة"], correctAnswerIndex: 2 },
+{ question: "ما هي الجريدة الرياضية الأكثر شعبية في الجزائر؟", answers: ["كومبيتيسيون", "الهداف", "لوبيتور", "كل ما سبق"], correctAnswerIndex: 3 },
+{ question: "ما هو اسم المؤسسة العمومية التي تدير التلفزيون الجزائري؟", answers: ["EPTV", "TDA", "APS", "ENRS"], correctAnswerIndex: 0 },
+{ question: "ما هي المدينة التي تحتضن 'المهرجان الدولي للصحفيين والمراسلين'؟", answers: ["وهران", "بجاية", "تيكجدة", "تيبازة"], correctAnswerIndex: 1 },
+{ question: "ما هو اسم البرنامج التلفزيوني الساخر الذي اشتهر في التسعينيات بتقليد الشخصيات السياسية؟", answers: ["جرنان القوسطو", "كاميرا مخفية", "ناس ملاح سيتي", "التوب 10"], correctAnswerIndex: 0 },
+{ question: "ما هي الإذاعة المحلية للعاصمة الجزائر؟", answers: ["إذاعة متيجة", "إذاعة البهجة", "إذاعة الساورة", "إذاعة الهضاب"], correctAnswerIndex: 1 },
+
+// --- النقل والمواصلات ---
+{ question: "ما هو الاسم المختصر للشركة الوطنية للنقل بالسكك الحديدية؟", answers: ["SNTF", "SNVI", "ETUSA", "Air Algérie"], correctAnswerIndex: 0 },
+{ question: "ما هو الاسم الرسمي لشركة الخطوط الجوية الجزائرية؟", answers: ["Air Algérie", "Tassili Airlines", "Algerian Airlines", "Star Aviation"], correctAnswerIndex: 0 },
+{ question: "في أي مدينة تم إطلاق أول خط 'ترامواي' في الجزائر؟", answers: ["وهران", "قسنطينة", "الجزائر العاصمة", "سطيف"], correctAnswerIndex: 2 },
+{ question: "ما هو الطريق الوطني الذي يلقب بـ'طريق الوحدة الإفريقية' ويربط شمال الجزائر بجنوبها؟", answers: ["الطريق الوطني رقم 1", "الطريق الوطني رقم 4", "الطريق السيار شرق-غرب", "الطريق الوطني رقم 5"], correctAnswerIndex: 0 },
+{ question: "ما هو أكبر مطار في الجزائر؟", answers: ["مطار هواري بومدين الدولي", "مطار أحمد بن بلة الدولي", "مطار محمد بوضياف الدولي", "مطار رابح بيطاط الدولي"], correctAnswerIndex: 0 },
+{ question: "ما هو الاسم المختصر للمؤسسة الوطنية للنقل الحضري وشبه الحضري في العاصمة؟", answers: ["ETUSA", "SNTF", "SETRAM", "CITAL"], correctAnswerIndex: 0 },
+{ question: "ما هي الشركة التي تدير 'مترو الجزائر'؟", answers: ["RATP El Djazaïr", "SNTF", "ETUSA", "SEAAL"], correctAnswerIndex: 0 },
+{ question: "ما هو كود الطيران الدولي (IATA) لشركة الخطوط الجوية الجزائرية؟", answers: ["ALG", "DAA", "AH", "DZA"], correctAnswerIndex: 2 },
+{ question: "ما هي الشركة الوطنية لصناعة المركبات الصناعية (الحافلات والشاحنات)؟", answers: ["SNVI", "Renault Algérie", "Peugeot Algérie", "SOVAC"], correctAnswerIndex: 0 },
+{ question: "ما هو اسم الجسر العملاق الذي يربط ضفتي وادي الرهيمل في قسنطينة؟", answers: ["جسر سيدي مسيد", "جسر باب القنطرة", "جسر صالح باي", "جسر ملاح سليمان"], correctAnswerIndex: 2 },
+{ question: "في أي سنة تم تدشين مترو الجزائر العاصمة؟", answers: ["2009", "2010", "2011", "2012"], correctAnswerIndex: 2 },
+{ question: "ما هي الوسيلة التي تستخدم للتنقل في أعالي العاصمة وتربط بين باب الواد وزغارة؟", answers: ["الترامواي", "المصعد الهوائي (التلفريك)", "المترو", "الحافلة الكهربائية"], correctAnswerIndex: 1 },
+{ question: "ما هو الميناء الرئيسي في الجزائر من حيث حجم التجارة (خارج المحروقات)؟", answers: ["ميناء وهران", "ميناء بجاية", "ميناء جن جن", "ميناء الجزائر"], correctAnswerIndex: 3 },
+{ question: "ما هي الشركة التي تشغل خطوط الترامواي في الجزائر؟", answers: ["SETRAM", "CITAL", "ETUSA", "SNTF"], correctAnswerIndex: 0 },
+{ question: "ما هو لون سيارات الأجرة (التاكسي) المميز في الجزائر العاصمة؟", answers: ["أبيض", "أصفر", "أزرق وأبيض", "أخضر"], correctAnswerIndex: 1 },
+
+// --- العلاقات الدولية والدبلوماسية ---
+{ question: "في أي منظمة دولية لعبت الجزائر دوراً محورياً في الدعوة لـ 'نظام اقتصادي دولي جديد' عام 1974؟", answers: ["جامعة الدول العربية", "منظمة الوحدة الإفريقية", "الأمم المتحدة", "حركة عدم الانحياز"], correctAnswerIndex: 2 },
+{ question: "من هو الدبلوماسي الجزائري الذي شغل منصب المبعوث الخاص للأمم المتحدة إلى سوريا؟", answers: ["رمطان لعمامرة", "لخضر براهيمي", "محمد الصالح دمبري", "يوسف يوسفي"], correctAnswerIndex: 1 },
+{ question: "ما هي الدولة التي توسطت فيها الجزائر لإنهاء أزمة الرهائن الأمريكيين عام 1981؟", answers: ["العراق", "لبنان", "إيران", "ليبيا"], correctAnswerIndex: 2 },
+{ question: "الجزائر عضو مؤسس في أي من هذه المنظمات؟", answers: ["منظمة أوبك", "منظمة الوحدة الإفريقية (الاتحاد الإفريقي حالياً)", "اتحاد المغرب العربي", "كل ما سبق"], correctAnswerIndex: 3 },
+{ question: "ما هو النزاع الحدودي الذي أنهته الجزائر باتفاقية سلام مع إريتريا عام 2000؟", answers: ["الحرب الإثيوبية-الإريترية", "الحرب الصومالية-الإثيوبية", "الحرب الأهلية السودانية", "النزاع في دارفور"], correctAnswerIndex: 0 },
+{ question: "ما هو موقف الجزائر التاريخي من القضية الفلسطينية؟", answers: ["محايد", "داعم بشكل كامل وغير مشروط", "داعم مشروط", "معارض"], correctAnswerIndex: 1 },
+{ question: "ما هو 'إعلان الجزائر' لعام 1975؟", answers: ["إعلان استقلال", "اتفاق سلام بين العراق وإيران", "إعلان تأسيس اتحاد المغرب العربي", "إعلان تأميم المحروقات"], correctAnswerIndex: 1 },
+{ question: "في أي مدينة يقع مقر 'أوبك' التي تعد الجزائر عضواً فيها؟", answers: ["جنيف", "نيويورك", "فيينا", "بروكسل"], correctAnswerIndex: 2 },
+{ question: "من هو وزير الخارجية الجزائري الذي شغل المنصب لأطول فترة؟", answers: ["عبد العزيز بوتفليقة", "محمد بجاوي", "رمطان لعمامرة", "محمد الصديق بن يحيى"], correctAnswerIndex: 0 },
+{ question: "ما هي الدولة التي تشترك مع الجزائر في أطول حدود برية؟", answers: ["المغرب", "ليبيا", "النيجر", "مالي"], correctAnswerIndex: 3 },
+
+// --- القانون والصحة والنظام الطبي ---
+{ question: "ما هو الاسم الرسمي لوثيقة إثبات ملكية السيارة في الجزائر؟", answers: ["البطاقة الرمادية", "شهادة الملكية", "عقد البيع", "رخصة المجاهدين"], correctAnswerIndex: 0 },
+{ question: "ما هي الجهة الحكومية المسؤولة عن قطاع الصحة في الجزائر؟", answers: ["وزارة العمل", "وزارة الصحة", "وزارة التضامن الوطني", "الصندوق الوطني للضمان الاجتماعي"], correctAnswerIndex: 1 },
+{ question: "ما هو اسم معهد الأبحاث الطبية الرائد في الجزائر؟", answers: ["معهد باستور", "معهد ابن رشد", "معهد ابن سينا", "المعهد الوطني للصحة العمومية"], correctAnswerIndex: 0 },
+{ question: "ما هي عقوبة الإعدام في الجزائر حالياً؟", answers: ["ملغاة تماماً", "منفذة بانتظام", "موجودة في القانون ولكن تنفيذها معلق", "تطبق فقط في الجرائم العسكرية"], correctAnswerIndex: 2 },
+{ question: "ما هو الرقم الأخضر المخصص للإبلاغ عن حالات كوفيد-19 في الجزائر؟", answers: ["3030", "14", "1055", "111"], correctAnswerIndex: 0 },
+{ question: "ما هو 'قانون المالية' الذي يصدر كل سنة؟", answers: ["قانون ينظم الضرائب", "قانون يحدد ميزانية الدولة", "قانون ينظم التجارة", "قانون العمل"], correctAnswerIndex: 1 },
+{ question: "ما هي الخدمة التي يقدمها 'SAMU' (Service d'Aide Médicale Urgente)؟", answers: ["التلقيح", "الاستشارات الطبية الهاتفية", "الإسعاف الطبي الاستعجالي", "التحاليل الطبية"], correctAnswerIndex: 2 },
+{ question: "ما هو 'الجريدة الرسمية للجمهورية الجزائرية' (JORA)؟", answers: ["جريدة إخبارية يومية", "النشرة التي تحتوي على جميع القوانين والمراسيم الجديدة", "مجلة قانونية", "تقرير سنوي للبرلمان"], correctAnswerIndex: 1 },
+{ question: "ما هو أول لقاح ضد فيروس كورونا تم استخدامه في الجزائر؟", answers: ["فايزر", "أسترازينيكا", "سبوتنيك V", "سينوفاك"], correctAnswerIndex: 2 },
+{ question: "ما هو 'الدستور'؟", answers: ["مجموعة قوانين جنائية", "القانون الأعلى في البلاد الذي يحدد نظام الحكم والحقوق", "قانون التجارة الدولية", "مدونة الأسرة"], correctAnswerIndex: 1 },
+
+// --- أسئلة متنوعة إضافية ---
+{ question: "ما هو الحيوان الذي كان يظهر على قطعة 100 دينار المعدنية القديمة؟", answers: ["الحصان", "الجمل", "الغزال", "الفنك"], correctAnswerIndex: 0 },
+{ question: "ما هي 'وكالة عدل' (AADL)؟", answers: ["وكالة لدعم الشباب", "وكالة لتطوير السكن وتحسينه (برنامج سكنات البيع بالإيجار)", "وكالة للسياحة", "وكالة للطاقة"], correctAnswerIndex: 1 },
+{ question: "من هي الشخصية التي تظهر على ورقة 500 دينار جزائري؟", answers: ["الأمير عبد القادر", "يوغرطة", "ماسينيسا", "هواري بومدين"], correctAnswerIndex: 2 },
+{ question: "ما هو الاسم القديم لمدينة 'عنابة'؟", answers: ["روسيكاد", "سيرتا", "هيبون", "كلاما"], correctAnswerIndex: 2 },
+{ question: "ما هو 'الفنك'؟", answers: ["نوع من الغزلان", "ثعلب الصحراء الصغير ذو الأذنين الكبيرتين", "طائر جارح", "سحلية صحراوية"], correctAnswerIndex: 1 },
+{ question: "ما هو المتحف الوطني الذي يقع في باردو بالجزائر العاصمة ويختص في ما قبل التاريخ والإثنوغرافيا؟", answers: ["متحف الفنون الجميلة", "متحف باردو", "متحف المجاهد", "متحف الجيش"], correctAnswerIndex: 1 },
+{ question: "ما هي 'الحنا' أو 'الحنة'؟", answers: ["نوع من التوابل", "نبات يستخدم لصبغ الشعر والجلد في الاحتفالات", "عشبة طبية", "بخور"], correctAnswerIndex: 1 },
+{ question: "من هو الإمبراطور الروماني الذي ولد في الجزائر (إيطاليكا، ولكن من أصل نوميدي)؟", answers: ["يوليوس قيصر", "أغسطس", "سبتيموس سيفيروس", "قسطنطين"], correctAnswerIndex: 2 },
+{ question: "ما هي 'دار السلطان'؟", answers: ["قصر رئاسي", "قصر تاريخي في القصبة السفلى كان مقراً للحكم العثماني", "متحف للفن الحديث", "مكتبة وطنية"], correctAnswerIndex: 1 },
+{ question: "ما هو الاسم الذي يطلق على الحلي التقليدية الفضية المزينة بالمرجان في منطقة القبائل؟", answers: ["الخلخال", "المقياس", "الحلي القبائلية", "السخاب"], correctAnswerIndex: 2 },
+{ question: "في أي ولاية تقع 'حديقة التجارب بالحامة'؟", answers: ["وهران", "قسنطينة", "الجزائر العاصمة", "عنابة"], correctAnswerIndex: 2 },
+{ question: "ما هي 'الصناعة التقليدية' التي تشتهر بها مدينة غرداية؟", answers: ["صناعة النحاس", "صناعة الفخار", "صناعة الزرابي (السجاد)", "صناعة الجلود"], correctAnswerIndex: 2 },
+// --- الدفعة السادسة: التعليم، المرأة والرجل، تفاصيل تاريخية وجغرافية (100 سؤال) ---
+// --- التعليم والجامعات ---
+{ question: "ما هو الاسم الرسمي لشهادة نهاية التعليم المتوسط في الجزائر؟", answers: ["البريفيه", "البيام (BEM)", "السيزيام", "الشهادة الإعدادية"], correctAnswerIndex: 1 },
+{ question: "ما هي أقدم جامعة في الجزائر؟", answers: ["جامعة وهران", "جامعة قسنطينة", "جامعة الجزائر (تأسست عام 1909)", "جامعة عنابة"], correctAnswerIndex: 2 },
+{ question: "ما هو 'الديوان الوطني للامتحانات والمسابقات' (ONEC)؟", answers: ["هيئة لتنظيم الرحلات المدرسية", "هيئة مسؤولة عن تنظيم الامتحانات الرسمية (باك، بيام)", "مكتبة وطنية للطلاب", "هيئة المنح الجامعية"], correctAnswerIndex: 1 },
+{ question: "ما هو الاسم الذي يطلق على السكن المخصص للطلاب الجامعيين؟", answers: ["الداخليات", "الأحياء الجامعية أو الإقامات", "السكن الطلابي", "بيوت الشباب"], correctAnswerIndex: 1 },
+{ question: "ما هو 'التعليم الإلزامي' في الجزائر؟", answers: ["إلزامي حتى سن 12 سنة", "إلزامي حتى سن 16 سنة", "إلزامي حتى نهاية المرحلة الثانوية", "اختياري"], correctAnswerIndex: 1 },
+{ question: "ما هي الجامعة التي تحمل اسم 'هواري بومدين' للعلوم والتكنولوجيا؟", answers: ["جامعة وهران", "جامعة باب الزوار (USTHB)", "جامعة قسنطينة", "جامعة البليدة"], correctAnswerIndex: 1 },
+{ question: "ما هو 'التكوين المهني'؟", answers: ["تعليم جامعي طويل", "تعليم يركز على اكتساب مهارات حرفية وعملية", "تعليم عسكري", "تعليم عن بعد"], correctAnswerIndex: 1 },
+{ question: "من هو وزير التربية الذي ارتبط اسمه بإصلاحات منظومة التعليم في بداية الألفية؟", answers: ["أبو بكر بن بوزيد", "علي بن محمد", "نورية بن غبريط", "عبد اللطيف بابا أحمد"], correctAnswerIndex: 0 },
+{ question: "ما هي 'المدرسة الوطنية للإدارة' (ENA)؟", answers: ["مدرسة لتكوين المهندسين", "مدرسة لتكوين الأساتذة", "مدرسة لتكوين الإطارات السامية للدولة", "مدرسة للفنون الجميلة"], correctAnswerIndex: 2 },
+{ question: "ما هو المصطلح الذي يطلق على الطالب الذي يعيد السنة الدراسية؟", answers: ["معيد", "راسب", "مكرر", "كل ما سبق صحيح"], correctAnswerIndex: 3 },
+{ question: "ما هي 'جامعة التكوين المتواصل' (UFC)؟", answers: ["جامعة للطلاب الأجانب", "جامعة تقدم فرصة التعليم لمن لم يسعفهم الحظ في البكالوريا", "جامعة خاصة", "جامعة افتراضية"], correctAnswerIndex: 1 },
+{ question: "ما هي أعلى علامة يمكن الحصول عليها في امتحان البكالوريا؟", answers: ["18/20", "19/20", "20/20", "لا يوجد حد أعلى"], correctAnswerIndex: 2 },
+{ question: "ما هي اللغة الأجنبية الأولى التي يتم تدريسها في المدارس الجزائرية؟", answers: ["الإنجليزية", "الإسبانية", "الفرنسية", "الألمانية"], correctAnswerIndex: 2 },
+{ question: "ما هو اسم المكتبة الوطنية الجزائرية؟", answers: ["مكتبة الحامة", "المكتبة الوطنية الجزائرية", "مكتبة جامعة الجزائر", "مكتبة مفدي زكريا"], correctAnswerIndex: 1 },
+{ question: "ما هو الاختصار الذي يعني 'الأعمال الموجهة' في الجامعة؟", answers: ["TP", "TD", "Cours", "Examen"], correctAnswerIndex: 1 },
+
+
+// --- الثقافة، اللهجة والفنون ---
+{ question: "ماذا تعني كلمة 'يهدر' في اللهجة الجزائرية؟", answers: ["يضحك", "يأكل", "يتكلم", "يمشي"], correctAnswerIndex: 2 },
+{ question: "ماذا يقصد الجزائري بكلمة 'التريبورتور'؟", answers: ["الثلاجة", "دراجة نارية بثلاث عجلات", "جهاز التحكم عن بعد", "الحاسوب المحمول"], correctAnswerIndex: 1 },
+{ question: "ما هو 'المندول'؟", answers: ["طبق تقليدي", "لباس رجالي", "آلة موسيقية وترية", "نوع من الرقص"], correctAnswerIndex: 2 },
+{ question: "من هو كاتب رواية 'ابن الفقير' التي تصف حياة طفل في منطقة القبائل؟", answers: ["كاتب ياسين", "محمد ديب", "مولود فرعون", "الطاهر جاووت"], correctAnswerIndex: 2 },
+{ question: "ما هو نوع الموسيقى الأندلسية الذي تشتهر به مدينة قسنطينة؟", answers: ["الغرناطي", "الصنعة", "المالوف", "الحوزي"], correctAnswerIndex: 2 },
+{ question: "في اللهجة الجزائرية، ما هو 'الفطور'؟", answers: ["وجبة الصباح", "وجبة منتصف النهار (الغداء)", "وجبة المساء (العشاء)", "وجبة خفيفة"], correctAnswerIndex: 1 },
+{ question: "من هو الفنان التشكيلي الذي يعتبر من مؤسسي 'فن الإشارة' في الجزائر؟", answers: ["محمد خدة", "امحمد إيسياخم", "بشير يلس", "عبد القادر جريو"], correctAnswerIndex: 0 },
+{ question: "ماذا تعني كلمة 'طونوبيل' باللهجة الجزائرية؟", answers: ["طائرة", "دراجة", "حافلة", "سيارة"], correctAnswerIndex: 3 },
+{ question: "من هو 'عميد الأغنية الشعبية (الشعبي)' في الجزائر؟", answers: ["دحمان الحراشي", "الحاج محمد العنقى", "الهاشمي قروابي", "كمال مسعودي"], correctAnswerIndex: 1 },
+{ question: "ما هو كتاب الأديب الجزائري 'ياسمينة خضرا' الذي حقق شهرة عالمية؟", answers: ["سنونوات كابول", "نجمة", "الدار الكبيرة", "ريح الجنوب"], correctAnswerIndex: 0 },
+{ question: "ماذا تعني عبارة 'ساهل ماهل'؟", answers: ["صعب جداً", "مستحيل", "سهل للغاية", "ممكن"], correctAnswerIndex: 2 },
+{ question: "من هو المغني القبائلي العالمي الذي اشتهر بأغنية 'A Vava Inouva'؟", answers: ["سليمان عازم", "معطوب الوناس", "إيدير", "لونيس آيت منقلات"], correctAnswerIndex: 2 },
+{ question: "ما هو 'القشابي'؟", answers: ["نوع من الحلي", "لباس شتوي تقليدي للرجال", "غطاء للرأس", "إناء فخاري"], correctAnswerIndex: 1 },
+{ question: "من هو الروائي الذي كتب ثلاثية الجزائر: 'الدار الكبيرة'، 'الحريق'، 'النول'؟", answers: ["مولود فرعون", "محمد ديب", "كاتب ياسين", "رشيد بوجدرة"], correctAnswerIndex: 1 },
+{ question: "ماذا تعني كلمة 'الزعاف' في اللهجة الجزائرية؟", answers: ["الفرح", "الخوف", "الغضب", "الحزن"], correctAnswerIndex: 2 },
+{ question: "ما هو المهرجان السنوي للموسيقى الذي يقام في مدينة جميلة الأثرية؟", answers: ["مهرجان تيمقاد", "مهرجان جميلة العربي", "مهرجان وهران للفيلم", "مهرجان الموسيقى الأندلسية"], correctAnswerIndex: 1 },
+{ question: "من هو الرسام الذي اشتهر برسم 'الخيالة' و'الفانتازيا'؟", answers: ["محمد راسم", "إتيان (ناصر الدين) ديني", "بشير يلس", "امحمد إيسياخم"], correctAnswerIndex: 1 },
+{ question: "ماذا يعني مصطلح 'جورنان'؟", answers: ["يومية", "أسبوعية", "مجلة", "جريدة"], correctAnswerIndex: 3 },
+{ question: "في أي مدينة جزائرية تأسست فرقة 'بابيلون' الشهيرة؟", answers: ["وهران", "قسنطينة", "تلمسان", "الجزائر العاصمة"], correctAnswerIndex: 3 },
+{ question: "من هي الروائية الجزائرشتهر بدور 'المفتش الطاهر' في سلسلة أفلام كوميدية؟", answers: ["عثمان عريوات", "رويشد", "حاج عبد الرحمن", "صالح أوقروت"], correctAnswerIndex: 2 },
+{ question: "ما هو أول فيلم جزائري يفوز بجائزة السعفة الذهبية في مهرجان كان؟", answers: ["ريح الأوراس", "وقائع سنين الجمر", "عمر قتلاتو الرجلة", "تحيا يا ديدو"], correctAnswerIndex: 1 },
+{ question: "من هو بطل فيلم 'عمر قتلاتو الرجلة'؟", answers: ["بوعلام بناني", "سيد علي كويرات", "محمد زينات", "عز الدين مجوبي"], correctAnswerIndex: 2 },
+{ question: "في أي فيلم اشتهر عثمان عريوات بشخصية 'الشيخ بوعمامة'؟", answers: ["كرنفال في دشرة", "سنوات الإشهار", "بوعمامة", "العرش"], correctAnswerIndex: 2 },
+{ question: "من هو الممثل الذي أدى دور 'علي لابوانت' في فيلم معركة الجزائر؟", answers: ["ياسف سعدي", "براهيم حجاج", "محمد بن قطاف", "سيد علي كويرات"], correctAnswerIndex: 1 },
+{ question: "ما هو اسم المسرح الوطني الجزائري في العاصمة؟", answers: ["مسرح قسنطينة الجهوي", "مسرح وهران الجهوي", "مسرح محي الدين بشطارزي", "مسرح عز الدين مجوبي"], correctAnswerIndex: 2 },
+{ question: "من هو كاتب مسرحية 'الشهداء يعودون هذا الأسبوع'؟", answers: ["عبد القادر علولة", "كاتب ياسين", "الطاهر وطار", "عز الدين مجوبي"], correctAnswerIndex: 2 },
+{ question: "ما هو الفيلم الذي يحكي قصة البطلة 'لالة فاطمة نسومر'؟", answers: ["ريح الأوراس", "فاطمة", "جبل الظل", "لا يوجد فيلم بهذا الاسم"], correctAnswerIndex: 1 },
+{ question: "من هو الممثل الكوميدي الذي اشتهر بلقب 'رويشد'؟", answers: ["محمد حلمي", "أحمد عياد", "حسن الحسني", "مصطفى كاتب"], correctAnswerIndex: 1 },
+
+// --- المطبخ الجزائري ---
+{ question: "ما هو المكون الرئيسي لطبق 'الرشتة' العاصمي؟", answers: ["أرز", "كسكس", "عجينة شعيرية رقيقة", "برغل"], correctAnswerIndex: 2 },
+{ question: "بماذا تُحشى حلوى 'المقروط' التقليدية في الغالب؟", answers: ["اللوز", "التمر (الغرس)", "الجوز", "الفول السوداني"], correctAnswerIndex: 1 },
+{ question: "ما هي 'الكرانتيكا' (الكاران) التي تشتهر بها وهران؟", answers: ["حساء بالسمك", "فطيرة بدقيق الحمص", "عصير ليمون", "خبز بالزيتون"], correctAnswerIndex: 1 },
+{ question: "ما هو الطبق الذي يُحضّر خصيصاً في عيد المولد النبوي في العديد من مناطق الجزائر؟", answers: ["الرشتة", "البركوكس", "الشخشوخة", "الطمينة"], correctAnswerIndex: 3 },
+{ question: "ما هو 'المثوم'؟", answers: ["حساء خضار", "طاجين لحم بكرات اللحم المفروم والثوم", "سلطة مشوية", "نوع من الخبز"], correctAnswerIndex: 1 },
+{ question: "ما هي الولاية التي تشتهر بطبق 'الشخشوخة'؟", answers: ["وهران", "قسنطينة", "المسيلة وبسكرة", "تلمسان"], correctAnswerIndex: 2 },
+{ question: "ما هو 'الزفيطي'، الطبق الحار الذي تشتهر به منطقة أولاد نايل؟", answers: ["حساء", "خبز و فلفل حار مهروس في المهراس", "طاجين", "سلطة"], correctAnswerIndex: 1 },
+{ question: "ما هو المشروب التقليدي الذي يُصنع من الحليب المخمر؟", answers: ["الشاربات", "الشاي", "القهوة", "اللبن أو الرايب"], correctAnswerIndex: 3 },
+{ question: "حلوى 'قلب اللوز' (أو الشامية) تعتمد بشكل أساسي على:", answers: ["اللوز", "الفارينة", "السميد الخشن", "جوز الهند"], correctAnswerIndex: 2 },
+{ question: "ما هو 'البوراك'؟", answers: ["نوع من الحساء", "لفائف عجينة مقلية محشوة", "حلوى بالعسل", "خبز تقليدي"], correctAnswerIndex: 1 },
+{ question: "ما هو المكون الذي يعطي اللون الأصفر للكسكس في بعض المناطق؟", answers: ["الزعفران", "الكركم", "الفلفل الأحمر", "الطماطم"], correctAnswerIndex: 1 },
+{ question: "ما هي 'الدوبارة'؟", answers: ["حساء حار بالحمص والفول", "طبق أرز بالدجاج", "سلطة فواكه", "عصير"], correctAnswerIndex: 0 },
+{ question: "بماذا تشتهر مدينة بجاية في مجال الصناعات الغذائية؟", answers: ["المشروبات الغازية", "زيت الزيتون", "مشتقات الحليب", "العجائن"], correctAnswerIndex: 1 },
+{ question: "ما هو 'الحميص' أو 'الفلفل المشوي'؟", answers: ["طبق رئيسي", "حلوى", "مقبل (سلطة)", "مشروب"], correctAnswerIndex: 2 },
+{ question: "ما هي 'الغريبية'؟", answers: ["حلوى جافة بالسميد", "حلوى جافة باللوز", "حلوى جافة بالدقيق والسمن", "كعك مالح"], correctAnswerIndex: 2 },
+// --- أسئلة متنوعة إضافية ---
+{ question: "ما هو اسم الوكالة الفضائية الجزائرية؟", answers: ["ALSA", "ASAL", "DZSA", "CNTS"], correctAnswerIndex: 1 },
+{ question: "من هي المرأة الجزائرية الوحيدة التي وقعت على وثيقة إعلان الثورة؟", answers: ["لا توجد", "جميلة بوحيرد", "ديدوشة مراد (اسم مستعار)", "كانت هناك امرأة لكن اسمها غير معروف"], correctAnswerIndex: 0 },
+{ question: "ما هو الحيوان الذي يظهر في شعار الحظيرة الوطنية لجرجرة؟", answers: ["الأيل البربري", "الفهد الصحراوي", "قرد المكاك البربري", "النسر الملكي"], correctAnswerIndex: 2 },
+{ question: "ما هو الاسم القديم لمدينة سكيكدة؟", answers: ["روسيكاد", "هيبون", "سيرتا", "كويكول"], correctAnswerIndex: 0 },
+{ question: "من هو 'بابا سالم' في مسرحية 'بوعلام زيد الڤدام'؟", answers: ["علال المحب", "عبد القادر علولة", "سيد علي كويرات", "كلثوم"], correctAnswerIndex: 0 },
+{ question: "ما هي 'القصبة' في المدن الجزائرية القديمة؟", answers: ["السوق الرئيسي", "القلعة أو المدينة القديمة", "المسجد الكبير", "الحي الإداري"], correctAnswerIndex: 1 },
+{ question: "ما هو اللقب الذي يطلق على مدينة قسنطينة؟", answers: ["البهجة", "الباهية", "مدينة الجسور المعلقة", "عاصمة الهضاب"], correctAnswerIndex: 2 },
+{ question: "ماذا يمثل الهلال والنجمة في العلم الجزائري؟", answers: ["الزراعة والصناعة", "الإسلام والأركان الخمسة", "التاريخ والمستقبل", "الثروة والنماء"], correctAnswerIndex: 1 },
+{ question: "في أي مدينة جزائرية يقع 'قصر الداي'؟", answers: ["وهران", "قسنطينة", "الجزائر العاصمة", "المدية"], correctAnswerIndex: 2 },
+{ question: "من هو الشاعر الذي كتب كلمات النشيد الوطني الجزائري 'قسماً' وهو في السجن؟", answers: ["محمد العيد آل خليفة", "مفدي زكريا", "أبو القاسم الشابي", "أحمد سحنون"], correctAnswerIndex: 1 },
+{ question: "ماذا تعني كلمة 'خلاص' باللهجة الجزائرية؟", answers: ["ابدأ", "انتظر", "انتهى / يكفي", "شكراً"], correctAnswerIndex: 2 },
+{ question: "ما هو نوع الفن الذي تشتهر به عائلة 'راسم'؟", answers: ["الموسيقى الأندلسية", "النحت", "المنمنمات والزخرفة", "الشعر الملحون"], correctAnswerIndex: 2 },
+{ question: "من هو أول رئيس للجزائر بعد إقرار التعددية الحزبية عام 1989؟", answers: ["هواري بومدين", "علي كافي", "الشاذلي بن جديد", "محمد بوضياف"], correctAnswerIndex: 2 },
+{ question: "ما هو اسم العملة الجزائرية قبل الدينار؟", answers: ["الفرنك الجزائري", "الدورو", "الريال", "السحتوت"], correctAnswerIndex: 0 },
+{ question: "في أي سنة بدأت العشرية السوداء في الجزائر؟", answers: ["1988", "1990", "1991", "1995"], correctAnswerIndex: 2 },
+// --- الدفعة الثالثة: مؤسسات، اقتصاد، سياسة، ومجتمع (100 سؤال) ---
+// --- المؤسسات والسياسة ---
+{ question: "ما هو الاسم الرسمي للبرلمان الجزائري بغرفتيه؟", answers: ["مجلس الأمة والمجلس الشعبي الوطني", "مجلس الشيوخ ومجلس النواب", "المجلس الدستوري والمجلس الأعلى", "الجمعية الوطنية والبرلمان"], correctAnswerIndex: 0 },
+{ question: "من هو أول رئيس للجزائر المستقلة؟", answers: ["فرحات عباس", "أحمد بن بلة", "هواري بومدين", "بن يوسف بن خدة"], correctAnswerIndex: 1 },
+{ question: "كم هي مدة العهدة الرئاسية في الجزائر حسب الدستور الحالي؟", answers: ["4 سنوات", "5 سنوات", "6 سنوات", "7 سنوات"], correctAnswerIndex: 1 },
+{ question: "ما هي الهيئة القضائية الأعلى في النظام القضائي الجزائري؟", answers: ["مجلس الدولة", "المحكمة العليا", "المحكمة الدستورية", "مجلس قضاء الجزائر"], correctAnswerIndex: 1 },
+{ question: "في أي عام تم إقرار أول دستور للجمهورية الجزائرية؟", answers: ["1962", "1963", "1976", "1989"], correctAnswerIndex: 1 },
+{ question: "من هو رئيس الدولة الذي اغتيل في عنابة عام 1992؟", answers: ["علي كافي", "اليمين زروال", "محمد بوضياف", "الشاذلي بن جديد"], correctAnswerIndex: 2 },
+{ question: "ما هو الجهاز التنفيذي في الدولة الجزائرية؟", answers: ["البرلمان", "الحكومة (الوزراء)", "المحكمة العليا", "المجلس الدستوري"], correctAnswerIndex: 1 },
+{ question: "ما هي أعلى هيئة استشارية أمنية لدى رئيس الجمهورية؟", answers: ["المجلس الأعلى للقضاء", "المجلس الأعلى للأمن", "مجلس الأمة", "قيادة الأركان"], correctAnswerIndex: 1 },
+{ question: "ما هي العملية التي يتم من خلالها مراجعة أو تعديل الدستور؟", answers: ["الانتخابات", "الاستفتاء الشعبي", "التصويت البرلماني", "المرسوم الرئاسي"], correctAnswerIndex: 1 },
+{ question: "من هو أول رئيس أركان للجيش الوطني الشعبي بعد الاستقلال؟", answers: ["هواري بومدين", "الطاهر زبيري", "خالد نزار", "محمد العماري"], correctAnswerIndex: 1 },
+{ question: "ما هو الاسم الذي يطلق على رئيس الغرفة السفلى للبرلمان؟", answers: ["رئيس مجلس الأمة", "رئيس المجلس الشعبي الوطني", "رئيس البرلمان", "رئيس المجلس الدستوري"], correctAnswerIndex: 1 },
+{ question: "في أي تاريخ يحتفل الجزائريون بعيد الاستقلال والشباب؟", answers: ["1 نوفمبر", "19 مارس", "20 أوت", "5 جويلية"], correctAnswerIndex: 3 },
+{ question: "ما هو الحزب الذي أسسه مصالي الحاج وكان من رواد الحركة الوطنية؟", answers: ["نجمة شمال إفريقيا", "حزب الشعب الجزائري", "حركة انتصار الحريات الديمقراطية", "كل ما سبق"], correctAnswerIndex: 3 },
+{ question: "ما هي الهيئة التي تراقب دستورية القوانين في الجزائر؟", answers: ["مجلس الدولة", "المحكمة العليا", "المحكمة الدستورية", "مجلس المحاسبة"], correctAnswerIndex: 2 },
+{ question: "كم عدد المقاعد في المجلس الشعبي الوطني (APN) حسب آخر انتخابات؟", answers: ["389", "407", "462", "512"], correctAnswerIndex: 1 },
+
+// --- الجيش والمؤسسات الأمنية ---
+{ question: "ما هو الشعار الرسمي للجيش الوطني الشعبي؟", answers: ["من الشعب وإلى الشعب", "وفاء، إخلاص، تضحية", "شرف، انضباط، عمل", "عقدنا العزم أن تحيا الجزائر"], correctAnswerIndex: 0 },
+{ question: "ما هو السلك الأمني الذي يتبع إدارياً لوزارة الدفاع الوطني؟", answers: ["الشرطة", "الحماية المدنية", "الجمارك", "الدرك الوطني"], correctAnswerIndex: 3 },
+{ question: "ما هو الرقم الأخضر الذي خصصته مصالح الدرك الوطني للمواطنين؟", answers: ["1548", "1055", "14", "17"], correctAnswerIndex: 1 },
+{ question: "ما هي الرتبة الأعلى في الجيش الوطني الشعبي؟", answers: ["لواء", "فريق", "فريق أول", "مشير (مارشال)"], correctAnswerIndex: 2 },
+{ question: "ما هي القوات الخاصة للشرطة الجزائرية المعروفة بـ'GOSP'؟", answers: ["مجموعة التدخل الخاص", "مجموعة العمليات الخاصة للشرطة", "فرقة البحث والتدخل", "قوات قمع الشغب"], correctAnswerIndex: 1 },
+{ question: "ما هي المهمة الرئيسية لمصالح الحماية المدنية؟", answers: ["التحقيق في الجرائم", "تنظيم المرور", "إغاثة وإنقاذ الأرواح والممتلكات", "حراسة الحدود"], correctAnswerIndex: 2 },
+{ question: "من هو القديس الحامي لسلك الحماية المدنية عالمياً؟", answers: ["القديس فلوريان", "القديسة باربرا", "القديس ميخائيل", "القديس جورج"], correctAnswerIndex: 1 },
+{ question: "ما هو الاسم الرسمي لقوات النخبة في الجيش الجزائري؟", answers: ["القوات الخاصة", "المظليون المغاوير", "الصاعقة", "كل ما سبق صحيح"], correctAnswerIndex: 3 },
+{ question: "ما هو دور الجمارك الجزائرية؟", answers: ["مكافحة التهريب وحماية الاقتصاد الوطني", "تأمين المنشآت العامة", "التحقيق في قضايا الفساد", "إصدار جوازات السفر"], correctAnswerIndex: 0 },
+{ question: "ما هو الرقم الأخضر الذي خصصته المديرية العامة للأمن الوطني؟", answers: ["104", "17", "1548", "1055"], correctAnswerIndex: 2 },
+
+// --- الاقتصاد والصناعة ---
+{ question: "ما هي الشركة الوطنية المسؤولة عن توزيع الكهرباء والغاز في الجزائر؟", answers: ["سوناطراك", "نفطال", "سونلغاز", "سيال"], correctAnswerIndex: 2 },
+{ question: "في أي عام تم تأميم المحروقات في الجزائر؟", answers: ["1962", "1971", "1976", "1980"], correctAnswerIndex: 1 },
+{ question: "ما هو المورد الطبيعي الذي يشكل غالبية صادرات الجزائر؟", answers: ["الحديد", "الفوسفات", "الغاز الطبيعي والنفط", "التمور"], correctAnswerIndex: 2 },
+{ question: "ما هو المركب الصناعي الشهير للحديد والصلب الذي يقع في ولاية عنابة؟", answers: ["مركب بلارة", "مركب الحجار", "مركب رويبة", "مركب سيدي موسى"], correctAnswerIndex: 1 },
+{ question: "ما هي العملة الرسمية للجزائر؟", answers: ["الفرنك", "الدورو", "الدينار", "السنتيم"], correctAnswerIndex: 2 },
+{ question: "ما هو اسم البورصة الجزائرية؟", answers: ["بورصة الجزائر", "سوق الأوراق المالية", "SGBV", "لا يوجد اسم رسمي"], correctAnswerIndex: 0 },
+{ question: "ما هي الشركة الوطنية المسؤولة عن تسويق وتوزيع المنتجات البترولية داخل الجزائر؟", answers: ["سوناطراك", "نفطال", "إيني", "توتال"], correctAnswerIndex: 1 },
+{ question: "ما هو أهم ميناء لتصدير المحروقات في الجزائر؟", answers: ["ميناء الجزائر", "ميناء أرزيو (وهران)", "ميناء جن جن (جيجل)", "ميناء عنابة"], correctAnswerIndex: 1 },
+{ question: "ما هي الولاية التي تعتبر قطباً رئيسياً في صناعة الإسمنت؟", answers: ["سطيف", "عين تموشنت", "الشلف", "كل ما سبق"], correctAnswerIndex: 3 },
+{ question: "ما هو القطاع الذي يساهم بأكبر نسبة في الناتج المحلي الإجمالي بعد المحروقات؟", answers: ["الزراعة", "الخدمات", "الصناعة", "البناء والأشغال العمومية"], correctAnswerIndex: 1 },
+{ question: "ما هي 'ANSEJ' (حالياً ANADE)؟", answers: ["وكالة لدعم تشغيل الشباب", "وكالة وطنية للسدود", "وكالة فضائية", "وكالة للطاقة النووية"], correctAnswerIndex: 0 },
+{ question: "ما هو المنتج الفلاحي الذي تشتهر به منطقة متيجة؟", answers: ["التمور", "الزيتون", "الحمضيات (البرتقال)", "الحبوب"], correctAnswerIndex: 2 },
+{ question: "ما هو أكبر حقل للغاز الطبيعي في الجزائر؟", answers: ["حقل حاسي الرمل", "حقل حاسي مسعود", "حقل عين أميناس", "حقل بركين"], correctAnswerIndex: 0 },
+{ question: "ما هي العلامة التجارية لأول سيارة تم تركيبها في الجزائر بعد 2012؟", answers: ["كيا", "هيونداي", "رونو (Symbol)", "بيجو"], correctAnswerIndex: 2 },
+{ question: "ما هو دور 'مجلس المحاسبة' في الجزائر؟", answers: ["محاسبة الوزراء", "مراقبة أموال الدولة بعد صرفها", "تحديد ميزانية الدولة", "إصدار العملة"], correctAnswerIndex: 1 },
+
+// --- المجتمع، القانون والتعليم ---
+{ question: "ما هو السن القانوني للرشد في الجزائر؟", answers: ["18 سنة", "19 سنة", "20 سنة", "21 سنة"], correctAnswerIndex: 1 },
+{ question: "ما هو القانون الذي ينظم العلاقات الأسرية في الجزائر؟", answers: ["القانون المدني", "قانون الأسرة", "قانون العقوبات", "القانون التجاري"], correctAnswerIndex: 1 },
+{ question: "ما هي أكبر جامعة في الجزائر من حيث عدد الطلاب؟", answers: ["جامعة الجزائر 1", "جامعة منتوري قسنطينة", "جامعة العلوم والتكنولوجيا هواري بومدين", "جامعة سطيف 1"], correctAnswerIndex: 2 },
+{ question: "ما هي شهادة نهاية التعليم الثانوي في الجزائر؟", answers: ["البريفيه", "الباك", "البكالوريا", "شهادة التعليم الأساسي"], correctAnswerIndex: 2 },
+{ question: "ما هو اللباس التقليدي للعروس في تلمسان؟", answers: ["الكاراكو", "البلوزة الوهرانية", "الشدة التلمسانية", "الجبة القسنطينية"], correctAnswerIndex: 2 },
+{ question: "متى تم اعتماد اللغة الأمازيغية كلغة وطنية ورسمية في الدستور؟", answers: ["2002 و 2016", "1996 و 2008", "1989 و 2001", "2010 و 2020"], correctAnswerIndex: 0 },
+{ question: "ما هي الوثيقة الإلزامية لكل سائق مركبة في الجزائر؟", answers: ["بطاقة التعريف", "رخصة السياقة", "جواز السفر", "البطاقة الرمادية"], correctAnswerIndex: 1 },
+{ question: "ما هو نظام التعليم العالي المطبق حالياً في الجامعات الجزائرية؟", answers: ["النظام الكلاسيكي", "نظام LMD (ليسانس-ماستر-دكتوراه)", "النظام الفرنسي", "النظام الأنجلوساكسوني"], correctAnswerIndex: 1 },
+{ question: "من هي أول امرأة جزائرية قادت طائرة؟", answers: ["حسيبة عمروش", "لويزة حنون", "يمينة الشايب", "لا توجد معلومات مؤكدة"], correctAnswerIndex: 2 },
+{ question: "ما هي المناسبة التي يحتفل بها الجزائريون في 16 أفريل من كل عام؟", answers: ["عيد المرأة", "عيد العمال", "يوم العلم", "يوم الشهيد"], correctAnswerIndex: 2 },
+{ question: "ما هو 'الكاراكو'؟", answers: ["لباس تقليدي عاصمي للمرأة", "طبق من الحلويات", "رقصة شعبية", "آلة موسيقية"], correctAnswerIndex: 0 },
+{ question: "ما هو اللقب الذي يطلق على المرأة الجزائرية التي حجت إلى مكة؟", answers: ["الحاجة", "المعلمة", "الشريفة", "السيدة"], correctAnswerIndex: 0 },
+{ question: "ما هي الهيئة المسؤولة عن تنظيم الانتخابات في الجزائر؟", answers: ["وزارة الداخلية", "المجلس الدستوري", "السلطة الوطنية المستقلة للانتخابات", "رئاسة الجمهورية"], correctAnswerIndex: 2 },
+{ question: "ما هو أشهر شارع في قلب الجزائر العاصمة؟", answers: ["شارع حسيبة بن بوعلي", "شارع العربي بن مهيدي", "شارع ديدوش مراد", "شارع زيغود يوسف"], correctAnswerIndex: 2 },
+{ question: "في أي ولاية تقع 'الزاوية الهبرية' الصوفية؟", answers: ["مستغانم", "معسكر", "غليزان", "وهران"], correctAnswerIndex: 1 },
+{ question: "ما هو الاسم الرسمي لوثيقة الحالة المدنية التي تثبت ولادة شخص؟", answers: ["شهادة ميلاد", "نسخة كاملة من شهادة الميلاد", "عقد ازدياد", "دفتر عائلي"], correctAnswerIndex: 2 },
+{ question: "من هي أول امرأة ترشحت للانتخابات الرئاسية في الجزائر والعالم العربي؟", answers: ["لويزة حنون", "خليدة تومي", "نعيمة صالحي", "زهرة ظريف بيطاط"], correctAnswerIndex: 0 },
+{ question: "ما هو 'التويزة'؟", answers: ["احتفال بالحصاد", "عمل تطوعي جماعي لمساعدة الغير", "سوق أسبوعي", "تقليد زواج"], correctAnswerIndex: 1 },
+{ question: "ما هي أقدم جريدة يومية ناطقة بالفرنسية لا تزال تصدر في الجزائر؟", answers: ["Le Matin", "La Tribune", "Liberté", "El Moudjahid"], correctAnswerIndex: 3 },
+{ question: "ما هي عقوبة استخدام الهاتف النقال أثناء القيادة في القانون الجزائري؟", answers: ["إنذار شفوي", "غرامة مالية وسحب الرخصة", "السجن", "أشغال للمنفعة العامة"], correctAnswerIndex: 1 },
+
+// --- أسئلة متنوعة إضافية ---
+{ question: "من هو أول وزير للخارجية في الجزائر المستقلة؟", answers: ["عبد العزيز بوتفليقة", "محمد الصديق بن يحيى", "محمد خميستي", "أحمد طالب الإبراهيمي"], correctAnswerIndex: 2 },
+{ question: "ما هي المدينة التي كانت تعرف بـ 'عاصمة الصلب' في الجزائر؟", answers: ["وهران", "الجزائر", "عنابة", "سكيكدة"], correctAnswerIndex: 2 },
+{ question: "ما هو الاسم الذي أطلق على مشروع الطريق السريع الذي يربط شرق الجزائر بغربها؟", answers: ["الطريق الوطني رقم 1", "طريق الوحدة الإفريقية", "الطريق السيار شرق-غرب", "طريق الصحراء السريع"], correctAnswerIndex: 2 },
+{ question: "ما هي القناة التلفزيونية العمومية الرئيسية في الجزائر؟", answers: ["Canal Algérie", "TV3", "البرنامج الوطني (الأرضية)", "قناة الأمازيغية"], correctAnswerIndex: 2 },
+{ question: "ما هو الرمز الذي يستخدم للدلالة على المنتجات المصنوعة في الجزائر؟", answers: ["صنع في الجزائر", "منتج جزائري أصلي", "الرمز الشريطي 613", "علامة 'الجودة الجزائرية'"], correctAnswerIndex: 2 },
+{ question: "من هي الشخصية النسائية التي تظهر على ورقة 2000 دينار جزائري؟", answers: ["لا يوجد شخصية، بل رموز علمية", "الكاهنة ديهيا", "لالة فاطمة نسومر", "جميلة بوحيرد"], correctAnswerIndex: 0 },
+{ question: "ما هي 'الإذاعة الشروق'؟", answers: ["قناة تلفزيونية", "محطة إذاعية خاصة", "جريدة إلكترونية", "وكالة أنباء"], correctAnswerIndex: 1 },
+{ question: "ما هي أكبر شركة اتصالات للهاتف النقال في الجزائر من حيث عدد المشتركين؟", answers: ["جازي", "أوريدو", "موبيليس", "كلهم متساوون"], correctAnswerIndex: 2 },
+{ question: "ما هو الاسم الرسمي لوكالة الأنباء الجزائرية؟", answers: ["و.أ.ج (وكالة الأنباء الجزائرية)", "APS (Algérie Presse Service)", "كلاهما صحيح", "لا يوجد اسم رسمي"], correctAnswerIndex: 2 },
+{ question: "ما هو لون جواز السفر الجزائري العادي؟", answers: ["أزرق", "أخضر", "أحمر", "أسود"], correctAnswerIndex: 1 },
+{ question: "من هو 'الوسيط' في الجمهورية الجزائرية؟", answers: ["رئيس الحكومة", "هيئة للتظلم تابعة لرئاسة الجمهورية", "رئيس مجلس الأمة", "وزير العدل"], correctAnswerIndex: 1 },
+{ question: "في أي سنة تم إطلاق خدمة الجيل الرابع 4G للإنترنت النقال في الجزائر؟", answers: ["2014", "2015", "2016", "2017"], correctAnswerIndex: 2 },
+{ question: "ما هي الجهة التي تصدر الطوابع البريدية في الجزائر؟", answers: ["وزارة المالية", "بنك الجزائر", "بريد الجزائر", "وزارة الثقافة"], correctAnswerIndex: 2 },
+{ question: "ما هي 'بطاقة الشفاء'؟", answers: ["بطاقة بنكية", "بطاقة هوية بيومترية", "بطاقة للضمان الاجتماعي والخدمات الصحية", "بطاقة اشتراك في النقل"], correctAnswerIndex: 2 },
+{ question: "ما هي الولاية التي تحتضن أكبر مركب لإنتاج الأدوية في إفريقيا (صيدال)؟", answers: ["البليدة", "الجزائر", "المدية", "بومرداس"], correctAnswerIndex: 2 },
+{ question: "ما هو الاسم المختصر لـ 'الشركة الوطنية للنقل بالسكك الحديدية'؟", answers: ["SNTF", "SNVI", "ETUSA", "Air Algérie"], correctAnswerIndex: 0 },
+// --- الدفعة الرابعة: شخصيات، مخترعون، تراث، وفنون دقيقة (100 سؤال) ---
+// --- شخصيات بارزة (علماء، أدباء، فنانون) ---
+{ question: "من هو الطبيب النفساني والكاتب الذي ولد في مارتينيك ودعم الثورة الجزائرية وكتب 'معذبو الأرض'؟", answers: ["جان بول سارتر", "ألبير كامو", "فرانز فانون", "جاك دريدا"], correctAnswerIndex: 2 },
+{ question: "من هو الروائي الجزائري الذي يكتب باللغة الفرنسية تحت اسم مستعار 'ياسمينة خضرا'؟", answers: ["رشيد بوجدرة", "محمد مولسهول", "بشير مفتي", "أمين الزاوي"], correctAnswerIndex: 1 },
+{ question: "من هو العالم الجزائري في الفيزياء الذي يعمل في وكالة ناسا وكان عضواً في فريق مسبار المريخ 'كيوريوسيتي'؟", answers: ["بلقاسم حبة", "إلياس زرهوني", "نور الدين مليكشي", "كمال يوسف تومي"], correctAnswerIndex: 2 },
+{ question: "من هو الفيلسوف الجزائري الذي ولد في سطيف واشتهر بنظرياته حول 'القابلية للاستعمار'؟", answers: ["محمد أركون", "عبد الله شريط", "مالك بن نبي", "مصطفى الأشرف"], correctAnswerIndex: 2 },
+{ question: "من هي المغنية التي لقبت بـ 'كوكب الطرب الجزائري' و 'وردة الجزائرية'؟", answers: ["سلوى", "فضيلة الدزيرية", "نورة", "وردة فتوكي"], correctAnswerIndex: 3 },
+{ question: "من هو الممثل الكوميدي الذي اشتهر بشخصية 'حسن طيرو' في فيلم 'هروب حسن طيرو'؟", answers: ["رويشد", "المفتش الطاهر", "حسن الحسني", "سيد علي كويرات"], correctAnswerIndex: 2 },
+{ question: "من هو المؤرخ الجزائري الذي يعتبر مرجعاً في تاريخ الجزائر الحديث والمعاصر وكتب 'تاريخ الجزائر العام'؟", answers: ["أبو القاسم سعد الله", "مبارك الميلي", "توفيق المدني", "عبد الرحمن الجيلالي"], correctAnswerIndex: 0 },
+{ question: "من هو الشاعر الذي لقب بـ 'أمير شعراء الأغنية الصحراوية'؟", answers: ["عبد الله بن كريو", "محمد بلخير", "الجيلالي عياد", "أحمد سحنون"], correctAnswerIndex: 0 },
+{ question: "من هو 'سيد الأغنية البدوية' الذي اشتهر بأغنية 'يا الرايح وين مسافر'؟", answers: ["الشيخ حمادة", "بلاوي الهواري", "أحمد وهبي", "دحمان الحراشي"], correctAnswerIndex: 3 },
+{ question: "من هو المخرج الذي أخرج فيلم 'الأفيون والعصا' المقتبس من رواية لمولود معمري؟", answers: ["لخضر حامينا", "أحمد راشدي", "محمد سليم رياض", "عمار العسكري"], correctAnswerIndex: 1 },
+{ question: "من هو الموسيقي الذي يعتبر مؤسس الموسيقى الأندلسية 'الصنعة' في الجزائر العاصمة؟", answers: ["الشيخ الناموس", "محمد سفينجة", "عبد الكريم دالي", "صادق البجاوي"], correctAnswerIndex: 1 },
+{ question: "من هي عالمة الاجتماع التي كتبت عن وضع المرأة الجزائرية واغتيلت عام 1995؟", answers: ["نبيلة جحنين", "آسيا جبار", "فاطمة مرنيسي", "عائشة قحار"], correctAnswerIndex: 0 },
+{ question: "من هو الطبيب والسياسي الذي كان أول رئيس للمجلس الأعلى للدولة بعد توقيف المسار الانتخابي؟", answers: ["رضا مالك", "علي كافي", "محمد بوضياف", "اليمين زروال"], correctAnswerIndex: 1 },
+{ question: "من هو الفنان الذي اشتهر بشخصية 'عمر قتلاتو' في فيلم يحمل نفس الاسم؟", answers: ["محمد زينات", "بوعلام بناني", "سيد علي كويرات", "عز الدين مجوبي"], correctAnswerIndex: 1 },
+{ question: "من هو الكاتب والصحفي الذي اغتيل عام 1993 والذي سميت باسمه 'جائزة الصحافة'؟", answers: ["الطاهر جاووت", "سعيد مقبل", "عبد القادر علولة", "يوسف سبتي"], correctAnswerIndex: 0 },
+
+
+// --- السينما والمسرح ---
+{ question: "من هو مخرج فيلم 'معركة الجزائر' (La Bataille d'Alger)؟", answers: ["جيلو بونتيكورفو", "لخضر حامينا", "محمد شويخ", "أحمد راشدي"], correctAnswerIndex: 0 },
+{ question: "من هو الممثل الذي الاية التي تضم أكبر عدد من البلديات في الجزائر؟", answers: ["سطيف", "تيزي وزو", "الشلف", "وهران"], correctAnswerIndex: 1 },
+{ question: "ما هي أعلى قمة في جبال جرجرة بولاية تيزي وزو؟", answers: ["تاهات", "شيليا", "لالة خديجة", "زاكار"], correctAnswerIndex: 2 },
+{ question: "في أي ولاية يقع سد بني هارون، أكبر سد في الجزائر؟", answers: ["جيجل", "سكيكدة", "ميلة", "قسنطينة"], correctAnswerIndex: 2 },
+{ question: "ما هي الولاية التي تشتهر بإنتاج الفلين؟", answers: ["عنابة", "سكيكدة", "جيجل", "الطارف"], correctAnswerIndex: 2 },
+{ question: "ولاية سطيف معروفة بآثارها الرومانية في مدينة جميلة، فما هو اسمها الروماني؟", answers: ["Cuicul", "Hippo Regius", "Timgad", "Cirta"], correctAnswerIndex: 0 },
+{ question: "بماذا تشتهر ولاية سعيدة؟", answers: ["بالحمامات المعدنية", "بالزراعة الصحراوية", "بصناعة السفن", "بمناجم الذهب"], correctAnswerIndex: 0 },
+{ question: "ما هي الولاية التي تضم ميناء جن جن؟", answers: ["سكيكدة", "بجاية", "جيجل", "عنابة"], correctAnswerIndex: 2 },
+{ question: "من أي ولاية ينحدر البطل 'سي الحواس'؟", answers: ["المسيلة", "بسكرة", "الجلفة", "الأغواط"], correctAnswerIndex: 1 },
+{ question: "ما هي الولاية التي كانت عاصمة بايلك الشرق؟", answers: ["عنابة", "سكيكدة", "قسنطينة", "سطيف"], correctAnswerIndex: 2 },
+{ question: "من أي ولاية هو أصل طبق 'الشخشوخة'؟", answers: ["قسنطينة", "المسيلة", "باتنة", "بسكرة"], correctAnswerIndex: 1 },
+{ question: "في أي ولاية تقع قلعة بني حماد؟", answers: ["سطيف", "برج بوعريريج", "المسيلة", "البويرة"], correctAnswerIndex: 2 },
+{ question: "بماذا تشتهر ولاية بومرداس؟", answers: ["بشواطئها الصخرية", "بمركز الأبحاث النووية", "بمينائها النفطي", "بجامعتها وكارثة الزلزال"], correctAnswerIndex: 3 },
+{ question: "في أي ولاية تقع منطقة 'تيكجدة' السياحية؟", answers: ["البويرة", "تيزي وزو", "بجاية", "سطيف"], correctAnswerIndex: 0 },
+{ question: "ما هي أعلى قمة في الجزائر وتقع في ولاية تمنراست؟", answers: ["شيليا", "لالة خديجة", "تاهات", "جبل عيسى"], correctAnswerIndex: 2 },
+{ question: "بماذا تشتهر ولاية تبسة تاريخياً؟", answers: ["بمقاومة الفاطميين", "بكونها عاصمة رومانية", "بأسوارها البيزنطية وكنيستها", "بمقاومة الأمير عبد القادر"], correctAnswerIndex: 2 },
+{ question: "ما هي الولاية التي كانت عاصمة الدولة الزيانية؟", answers: ["وهران", "معسكر", "تلمسان", "سيدي بلعباس"], correctAnswerIndex: 2 },
+{ question: "ما هي الولاية التي تضم 'غابات الأرز' الشهيرة في ثنية الحد؟", answers: ["المدية", "عين الدفلى", "تيسمسيلت", "الشلف"], correctAnswerIndex: 2 },
+{ question: "ما هي الولاية التي تلقب بـ 'عاصمة الألف قبة وقبة'؟", answers: ["بسكرة", "غرداية", "الوادي", "ورقلة"], correctAnswerIndex: 2 },
+{ question: "ما هي الولاية التي تحتضن آثار مدينة تيمقاد الرومانية؟", answers: ["أم البواقي", "خنشلة", "باتنة", "تبسة"], correctAnswerIndex: 1 },
+{ question: "بماذا تشتهر ولاية سوق أهراس؟", answers: ["بكونها مسقط رأس القديس أوغسطين", "بإنتاج الحمضيات", "بصناعة السيارات", "بمناجم الحديد"], correctAnswerIndex: 0 },
+{ question: "ما هي الولاية التي تضم مدينة شرشال وميناءها التاريخي؟", answers: ["الجزائر", "بومرداس", "تيبازة", "الشلف"], correctAnswerIndex: 2 },
+{ question: "أين يقع الضريح الملكي الموريتاني (قبر الرومية)؟", answers: ["ولاية الجزائر", "ولاية تيبازة", "ولاية بومرداس", "ولاية الشلف"], correctAnswerIndex: 1 },
+{ question: "ما هي الولاية التي تُعرف بكونها عاصمة 'بايلك التيطري'؟", answers: ["الجزائر", "البليدة", "المدية", "عين الدفلى"], correctAnswerIndex: 2 },
+{ question: "بماذا تشتهر ولاية مستغانم؟", answers: ["بمهرجان الموسيقى الأندلسية", "بمهرجان مسرح الهواة", "بزراعة الكروم", "بأضرحة الصوفية"], correctAnswerIndex: 1 },
+{ question: "في أي ولاية تأسست 'نجمة شمال إفريقيا' على يد مصالي الحاج؟", answers: ["تلمسان", "الجزائر العاصمة", "قسنطينة", "سطيف"], correctAnswerIndex: 0 },
+{ question: "ما هي الولاية التي تضم مدينة 'حاسي مسعود' النفطية؟", answers: ["غرداية", "الأغواط", "ورقلة", "إليزي"], correctAnswerIndex: 2 },
+{ question: "ولاية البيض هي حلقة وصل بين الهضاب والصحراء، فما هي أهم سلسلة جبلية فيها؟", answers: ["جبال القصور", "جبال عمور", "جبال الأوراس", "جبال الونشريس"], correctAnswerIndex: 1 },
+{ question: "بماذا تشتهر ولاية إليزي؟", answers: ["بالبترول", "بالتمور", "بالنقوش الصخرية في طاسيلي ناجر", "بالزراعة"], correctAnswerIndex: 2 },
+{ question: "ما هي الولاية التي تعتبر عاصمة صناعة الإلكترونيك في الجزائر؟", answers: ["سطيف", "الجزائر", "برج بوعريريج", "وهران"], correctAnswerIndex: 2 },
+{ question: "ما هي الولاية التي تحتضن 'واحة تاغيت' الساحرة؟", answers: ["أدرار", "بشار", "تندوف", "النعامة"], correctAnswerIndex: 1 },
+{ question: "بماذا تشتهر ولاية الطارف؟", answers: ["بالحديقة الوطنية للقالة وبحيراتها", "بالصيد البحري", "بالصناعة الثقيلة", "بزراعة الحبوب"], correctAnswerIndex: 0 },
+{ question: "ما هي الولاية التي تضم أكبر منجم للحديد في الجزائر (منجم الونزة)؟", answers: ["عنابة", "قالمة", "تبسة", "سوق أهراس"], correctAnswerIndex: 2 },
+{ question: "ما هي الولاية التي تشتهر بحماماتها المعدنية مثل 'حمام المسخوطين'؟", answers: ["سكيكدة", "عنابة", "قالمة", "قسنطينة"], correctAnswerIndex: 2 },
+{ question: "بماذا تشتهر ولاية غليزان؟", answers: ["زراعة الزيتون", "سهل مينا الزراعي", "صناعة النسيج", "مقاومة بوعمامة"], correctAnswerIndex: 1 },
+{ question: "ما هي الولاية التي كانت معقلاً مهماً خلال ثورة المقراني؟", answers: ["سطيف", "المسيلة", "برج بوعريريج", "بجاية"], correctAnswerIndex: 2 },
+{ question: "ما هي الولاية التي تشتهر بـ'زربية بابار' التقليدية؟", answers: ["باتنة", "بسكرة", "خنشلة", "أم البواقي"], correctAnswerIndex: 2 },
+{ question: "ما هي الولاية التي تضم مقر الزاوية التيجانية؟", answers: ["الجلفة", "الأغواط", "البيض", "بسكرة"], correctAnswerIndex: 1 },
+{ question: "بماذا تشتهر ولاية عين الدفلى؟", answers: ["بإنتاج البطاطا والتفاح", "بالصناعات الغذائية", "بالسياحة الجبلية", "بالصيد"], correctAnswerIndex: 0 },
+{ question: "في أي ولاية يقع 'جبل محمل' الشهير في مقاومة الأوراس؟", answers: ["باتنة", "خنشلة", "تبسة", "أم البواقي"], correctAnswerIndex: 1 },
+{ question: "بماذا تشتهر ولاية تندوف؟", answers: ["بالتمور", "بسباق المهاري", "بمخيمات اللاجئين الصحراويين ومناجم غار جبيلات", "بالسياحة"], correctAnswerIndex: 2 },
+{ question: "ما هي الولاية الجديدة التي كانت تابعة لولاية أدرار؟", answers: ["بني عباس", "تيميمون", "برج باجي مختار", "عين صالح"], correctAnswerIndex: 2 },
+{ question: "ما هي الولاية الجديدة التي تشتهر بواحات النخيل والقصور الحمراء؟", answers: ["برج باجي مختار", "تيميمون", "عين صالح", "جانت"], correctAnswerIndex: 1 },
+{ question: "ما هي الولاية الجديدة التي كانت جزءاً من ولاية بشار؟", answers: ["بني عباس", "تيميمون", "المنيعة", "أولاد جلال"], correctAnswerIndex: 0 },
+{ question: "من أي ولاية تم فصل ولاية أولاد جلال الجديدة؟", answers: ["المسيلة", "الجلفة", "بسكرة", "الأغواط"], correctAnswerIndex: 2 },
+{ question: "ما هي الولاية الجديدة التي تعتبر بوابة الصحراء الكبرى الجنوبية؟", answers: ["جانت", "برج باجي مختار", "عين صالح", "عين قزام"], correctAnswerIndex: 2 },
+{ question: "ما هي الولاية الجديدة التي تقع في أقصى جنوب الجزائر على الحدود مع النيجر؟", answers: ["جانت", "عين صالح", "برج باجي مختار", "عين قزام"], correctAnswerIndex: 3 },
+{ question: "ولاية المغير الجديدة كانت تابعة لأي ولاية؟", answers: ["بسكرة", "ورقلة", "الوادي", "غرداية"], correctAnswerIndex: 2 },
+{ question: "ما هي الولاية الجديدة التي تشتهر بإنتاج التمور وبحيراتها المالحة؟", answers: ["أولاد جلال", "المغير", "المنيعة", "تقرت"], correctAnswerIndex: 3 },
+{ question: "ما هي الولاية الجديدة التي تقع جنوب غرداية وتعرف بواحاتها؟", answers: ["المنيعة", "تقرت", "المغير", "أولاد جلال"], correctAnswerIndex: 0 },
+{ question: "ولاية جانت الجديدة، بماذا تشتهر عالمياً؟", answers: ["بالبترول", "بالطاسيلي ناجر", "بزراعة القمح", "بجامعتها"], correctAnswerIndex: 1 },
+
+// --- التاريخ القديم ---
+{ question: "من هو أشهر ملك أمازيغي وحد نوميديا؟", answers: ["سيفاكس", "يوغرطة", "ماسينيسا", "يوبا الثاني"], correctAnswerIndex: 2 },
+{ question: "ما هي المدينة التي كانت عاصمة للملك سيفاكس في نوميديا الغربية؟", answers: ["سيرتا", "هيبون", "قرطاجنة", "روسيكادا"], correctAnswerIndex: 0 },
+{ question: "ضد أي إمبراطورية قاد يوغرطة حربه الشهيرة؟", answers: ["الإمبراطورية الفينيقية", "الإمبراطورية الرومانية", "الإمبراطورية البيزنطية", "الإمبراطورية اليونانية"], correctAnswerIndex: 1 },
+{ question: "من هي الملكة الأمازيغية التي خلفت الملك أكسل (كسيلة) في مقاومة الفتح الإسلامي؟", answers: ["تين هينان", "الكاهنة ديهيا", "لالة فاطمة نسومر", "تازيري"], correctAnswerIndex: 1 },
+{ question: "ما اسم العاصمة التي بناها بولوغين بن زيري بأمر من والده مؤسس الدولة الزيرية؟", answers: ["أشير", "الجزائر", "المهدية", "بجاية"], correctAnswerIndex: 1 },
+{ question: "ما هي الدولة التي أسسها عبد الرحمن بن رستم في منطقة تيهرت (تيارت حالياً)؟", answers: ["الدولة الزيرية", "الدولة الرستمية", "الدولة الموحدية", "الدولة الحفصية"], correctAnswerIndex: 1 },
+{ question: "في عهد أي دولة إسلامية أصبحت بجاية مركز إشعاع علمي كبير؟", answers: ["المرابطية", "الحمادية", "الزيانية", "الموحدية"], correctAnswerIndex: 1 },
+{ question: "من هو القائد البحري الذي حرر الجزائر من الاحتلال الإسباني وجعلها تابعة للدولة العثمانية؟", answers: ["خير الدين بربروس", "حسن آغا", "صالح رايس", "علي بتشين"], correctAnswerIndex: 0 },
+{ question: "ماذا كانت تسمى مكانة حاكم الجزائر في العهد العثماني؟", answers: ["باشا", "باي", "داي", "سلطان"], correctAnswerIndex: 2 },
+{ question: "ما هي الحادثة التي اتخذتها فرنسا ذريعة لاحتلال الجزائر عام 1830؟", answers: ["حادثة المروحة", "قضية الديون", "القرصنة في المتوسط", "مهاجمة حصن فرنسي"], correctAnswerIndex: 0 },
+
+// --- الثورة التحريرية ---
+{ question: "كم عدد أعضاء 'لجنة الـ 22' التاريخية التي خططت للثورة؟", answers: ["6", "9", "22", "54"], correctAnswerIndex: 2 },
+{ question: "ما هو الاسم الذي أطلق على الولاية التاريخية الخامسة (وهران وضواحيها)؟", answers: ["الولاية الوهرانية", "الغرب الجزائري", "المنطقة المستقلة", "لا يوجد اسم محدد"], correctAnswerIndex: 0 },
+{ question: "من هو القائد الذي خلف مصطفى بن بولعيد على رأس الولاية الأولى (الأوراس) بعد استشهاده؟", answers: ["زيغود يوسف", "كريم بلقاسم", "العقيد شعباني", "عمر بن بولعيد"], correctAnswerIndex: 3 },
+{ question: "ما اسم الصحيفة السرية التي كانت لسان حال جبهة التحرير الوطني؟", answers: ["الشعب", "المجاهد", "الخبر", "الوطن"], correctAnswerIndex: 1 },
+{ question: "من هو أصغر أعضاء مجموعة الستة مفجري الثورة سناً؟", answers: ["ديدوش مراد", "رابح بيطاط", "العربي بن مهيدي", "محمد بوضياف"], correctAnswerIndex: 1 },
+{ question: "في أي دولة أوروبية كانت تتمركز 'فيدرالية جبهة التحرير'؟", answers: ["سويسرا", "إيطاليا", "إسبانيا", "فرنسا"], correctAnswerIndex: 3 },
+{ question: "ما هو الاسم الذي أطلق على معركة الجزائر العاصمة؟", answers: ["La Bataille d'Alger", "Opération Oiseau Bleu", "Le plan Challe", "La nuit des longs couteaux"], correctAnswerIndex: 0 },
+{ question: "من هي المجاهدة التي كانت مهمتها الرئيسية زرع القنابل في 'معركة الجزائر'؟", answers: ["جميلة بوحيرد", "حسيبة بن بوعلي", "زهور ونيسي", "آسيا جبار"], correctAnswerIndex: 1 },
+{ question: "ما هي الاتفاقية التي أنهت الحرب وأدت إلى استقلال الجزائر؟", answers: ["اتفاقية لوزان", "اتفاقية جنيف", "اتفاقية إيفيان", "اتفاقية أوسلو"], correctAnswerIndex: 2 },
+{ question: "متى تم إيقاف إطلاق النار رسمياً في الجزائر؟", answers: ["5 جويلية 1962", "1 نوفمبر 1954", "19 مارس 1962", "20 أوت 1956"], correctAnswerIndex: 2 },
+
+// --- الجغرافيا والبيئة ---
+{ question: "ما هو أطول وادٍ في الجزائر؟", answers: ["واد الشلف", "واد سيبوس", "واد الصومام", "واد مجردة"], correctAnswerIndex: 0 },
+{ question: "ما هو أكبر منتزه وطني في الجزائر من حيث المساحة؟", answers: ["منتزه جرجرة", "منتزه قورايا", "منتزه طاسيلي ناجر", "منتزه بلزمة"], correctAnswerIndex: 2 },
+{ question: "ما اسم الرياح الجنوبية الحارة المحملة بالرمال التي تهب على شمال الجزائر؟", answers: ["الهابوب", "الخماسين", "السموم", "السيروكو (الشهيلي)"], correctAnswerIndex: 3 },
+{ question: "أين يقع 'شط ملغيغ'، أكثر نقطة انخفاضاً في الجزائر؟", answers: ["ولاية الوادي", "ولاية بسكرة", "ولاية ورقلة", "ولاية الأغواط"], correctAnswerIndex: 1 },
+{ question: "ما هو الحيوان الذي يعتبر شعار الحظيرة الوطنية للقالة؟", answers: ["الأيل البربري", "الفنك", "الضبع المخطط", "غزال كوفييه"], correctAnswerIndex: 0 },
+{ question: "الجزائر هي عاشر أكبر دولة في العالم، فما هي مرتبتها في إفريقيا؟", answers: ["الأولى", "الثانية", "الثالثة", "الرابعة"], correctAnswerIndex: 0 },
+{ question: "ما هو النوع النباتي الذي يغطي مساحات شاسعة في أقصى جنوب الجزائر؟", answers: ["أشجار الأرز", "أشجار الفلين", "نبات الحلفاء", "لا شيء تقريباً (صحراء قاحلة)"], correctAnswerIndex: 3 },
+{ question: "ما هو الاسم الذي يطلق على السهول العليا في الجزائر؟", answers: ["الهضاب العليا", "الساحل", "التل", "الصحراء"], correctAnswerIndex: 0 },
+{ question: "أي من هذه المدن تقع على 'خط غرينتش'؟", answers: ["وهران", "مستغانم", "الجزائر العاصمة", "تلمسان"], correctAnswerIndex: 1 },
+{ question: "ما هي الظاهرة الطبيعية التي تحدث في صحراء تندوف وتجذب السياح؟", answers: ["البراكين الخامدة", "الورود الرملية", "الشفق القطبي", "العيون الحارة"], correctAnswerIndex: 1 },
+
+// --- أسئلة إضافية متنوعة ---
+{ question: "من هو الرئيس الجزائري الذي أطلق مشروع 'السد الأخضر'؟", answers: ["أحمد بن بلة", "هواري بومدين", "الشاذلي بن جديد", "اليمين زروال"], correctAnswerIndex: 1 },
+{ question: "ما هو الاسم الرسمي للغة الأمازيغية في الدستور الجزائري؟", answers: ["الشاوية", "القبائلية", "تيفيناغ", "تمازيغت"], correctAnswerIndex: 3 },
+{ question: "في أي عام تم ترسيم 'يناير' كعطلة وطنية مدفوعة الأجر؟", answers: ["2015", "2016", "2017", "2018"], correctAnswerIndex: 3 },
+{ question: "من هو أول جزائري صعد إلى الفضاء؟", answers: ["لا يوجد", "نور الدين مليكشي", "بلقاسم حبة", "عبد القادر جريو"], correctAnswerIndex: 0 },
+{ question: "ما هي المدينة الجزائرية التي تلقب بـ 'عاصمة الغرب'؟", answers: ["تلمسان", "مستغانم", "سيدي بلعباس", "وهران"], correctAnswerIndex: 3 },
+{ question: "ما هو اللقب الذي أطلق على الروائي الجزائري 'مولود فرعون'؟", answers: ["عميد الأدب", "فيلسوف الرواية", "كاتب القبائل", "صوت الفقراء"], correctAnswerIndex: 2 },
+{ question: "ما هي أكبر شركة في الجزائر وإفريقيا من حيث الإيرادات؟", answers: ["سونلغاز", "موبيليس", "سوناطراك", "نفطال"], correctAnswerIndex: 2 }, 
+// --- الدفعة الثانية: الرياضة، الثقافة، الفن، والمطبخ (100 سؤال) ---
+// --- الرياضة الجزائرية ---
+{ question: "من هو أول رياضي جزائري يفوز بميدالية ذهبية في الألعاب الأولمبية؟", answers: ["نور الدين مرسلي", "توفيق مخلوفي", "حسيبة بولمرقة", "حسين سلطاني"], correctAnswerIndex: 2 },
+{ question: "في أي عام فازت الجزائر بكأس أمم إفريقيا لكرة القدم لأول مرة؟", answers: ["1988", "1990", "1992", "2019"], correctAnswerIndex: 1 },
+{ question: "ما هو الملعب الذي احتضن نهائي كأس إفريقيا 1990 بالجزائر؟", answers: ["ملعب مصطفى تشاكر", "ملعب 19 ماي 1956", "ملعب 5 جويلية 1962", "ملعب ميلود هدفي"], correctAnswerIndex: 2 },
+{ question: "من هو اللاعب الجزائري الوحيد الذي فاز بجائزة الكرة الذهبية الإفريقية 3 مرات؟", answers: ["لخضر بلومي", "رابح ماجر", "رياض محرز", "مصطفى دحلب"], correctAnswerIndex: 0 },
+{ question: "ضد أي منتخب سجل رياض محرز هدفه الشهير من ركلة حرة في نصف نهائي كأس إفريقيا 2019؟", answers: ["السنغال", "كوت ديفوار", "نيجيريا", "تونس"], correctAnswerIndex: 2 },
+{ question: "من هو العداء الجزائري الذي حمل الرقم القياسي العالمي في سباق 1500 متر لسنوات طويلة؟", answers: ["علي سعيدي سياف", "توفيق مخلوفي", "نور الدين مرسلي", "العربي بورعدة"], correctAnswerIndex: 2 },
+{ question: "ما هو النادي الجزائري الذي فاز بدوري أبطال إفريقيا عام 2014؟", answers: ["مولودية الجزائر", "شبيبة القبائل", "اتحاد العاصمة", "وفاق سطيف"], correctAnswerIndex: 3 },
+{ question: "من هو حارس مرمى المنتخب الجزائري في مونديال 2014 الذي تألق ضد ألمانيا؟", answers: ["محمد الأمين زماموش", "وهاب رايس مبولحي", "فوزي شاوشي", "عز الدين دوخة"], correctAnswerIndex: 1 },
+{ question: "في أي رياضة برزت البطلة الأولمبية نورية بنيدة مراح؟", answers: ["الجودو", "السباحة", "ألعاب القوى (1500م)", "المبارزة"], correctAnswerIndex: 2 },
+{ question: "ما هو لقب نادي مولودية الجزائر؟", answers: ["النسور", "العميد", "الكناري", "الحمراوة"], correctAnswerIndex: 1 },
+{ question: "من هو المدرب الذي قاد الجزائر للتأهل التاريخي للدور الثاني في مونديال 2014؟", answers: ["رابح سعدان", "جورج ليكنس", "كريستيان غوركوف", "وحيد حاليلوزيتش"], correctAnswerIndex: 3 },
+{ question: "ما هو اسم الملعب الجديد في وهران الذي استضاف ألعاب البحر الأبيض المتوسط؟", answers: ["ملعب أحمد زبانة", "ملعب ميلود هدفي", "ملعب 24 فبراير", "ملعب الحبيب بوعقل"], correctAnswerIndex: 1 },
+{ question: "من هو الملاكم الجزائري الذي فاز بأول ميدالية ذهبية أولمبية للجزائر في الملاكمة؟", answers: ["محمد بن قاسمية", "حسين سلطاني", "محمد علالو", "مصطفى موسى"], correctAnswerIndex: 1 },
+{ question: "ما هو أقدم نادي كرة قدم في الجزائر لا يزال نشطاً؟", answers: ["مولودية وهران", "شباب قسنطينة", "مولودية الجزائر", "اتحاد البليدة"], correctAnswerIndex: 2 },
+{ question: "كم مرة شاركت الجزائر في كأس العالم لكرة القدم (حتى 2022)؟", answers: ["3 مرات", "4 مرات", "5 مرات", "6 مرات"], correctAnswerIndex: 1 },
+{ question: "في أي رياضة اشتهر البطل الجزائري العربي بورعدة؟", answers: ["سباق الماراثون", "القفز الطويل", "العشاري", "رمي الرمح"], correctAnswerIndex: 2 },
+{ question: "ما هو لقب نادي شبيبة القبائل؟", answers: ["أسود جرجرة", "الكناري", "الحراش", "الزعيم"], correctAnswerIndex: 1 },
+{ question: "من هو اللاعب الذي سجل أول هدف للجزائر في تاريخ كأس العالم؟", answers: ["رابح ماجر", "لخضر بلومي", "جمال زيدان", "صالح عصاد"], correctAnswerIndex: 2 },
+{ question: "ما هي المدينة التي تعتبر معقل نادي 'وفاق سطيف'؟", answers: ["قسنطينة", "برج بوعريريج", "سطيف", "المسيلة"], correctAnswerIndex: 2 },
+{ question: "في أي أولمبياد فاز توفيق مخلوفي بذهبية 1500 متر؟", answers: ["بكين 2008", "لندن 2012", "ريو 2016", "طوكيو 2020"], correctAnswerIndex: 1 },
+
+
+// --- الجغرافيا والبيئة ---
+{ question: "ما هو أطول وادٍ في الجزائر؟", answers: ["واد الشلف", "واد سيبوس", "واد الصومام", "واد مجردة"], correctAnswerIndex: 0 },
+{ question: "ما هو أكبر منتزه وطني في الجزائر من حيث المساحة؟", answers: ["منتزه جرجرة", "منتزه قورايا", "منتزه طاسيلي ناجر", "منتزه بلزمة"], correctAnswerIndex: 2 },
+{ question: "ما اسم الرياح الجنوبية الحارة المحملة بالرمال التي تهب على شمال الجزائر؟", answers: ["الهابوب", "الخماسين", "السموم", "السيروكو (الشهيلي)"], correctAnswerIndex: 3 },
+{ question: "أين يقع 'شط ملغيغ'، أكثر نقطة انخفاضاً في الجزائر؟", answers: ["ولاية الوادي", "ولاية بسكرة", "ولاية ورقلة", "ولاية الأغواط"], correctAnswerIndex: 1 },
+{ question: "ما هو الحيوان الذي يعتبر شعار الحظيرة الوطنية للقالة؟", answers: ["الأيل البربري", "الفنك", "الضبع المخطط", "غزال كوفييه"], correctAnswerIndex: 0 },
+{ question: "الجزائر هي عاشر أكبر دولة في العالم، فما هي مرتبتها في إفريقيا؟", answers: ["الأولى", "الثانية", "الثالثة", "الرابعة"], correctAnswerIndex: 0 },
+{ question: "ما هو النوع النباتي الذي يغطي مساحات شاسعة في أقصى جنوب الجزائر؟", answers: ["أشجار الأرز", "أشجار الفلين", "نبات الحلفاء", "لا شيء تقريباً (صحراء قاحلة)"], correctAnswerIndex: 3 },
+{ question: "ما هو الاسم الذي يطلق على السهول العليا في الجزائر؟", answers: ["الهضاب العليا", "الساحل", "التل", "الصحراء"], correctAnswerIndex: 0 },
+{ question: "أي من هذه المدن تقع على 'خط غرينتش'؟", answers: ["وهران", "مستغانم", "الجزائر العاصمة", "تلمسان"], correctAnswerIndex: 1 },
+{ question: "ما هي الظاهرة الطبيعية التي تحدث في صحراء تندوف وتجذب السياح؟", answers: ["البراكين الخامدة", "الورود الرملية", "الشفق القطبي", "العيون الحارة"], correctAnswerIndex: 1 },
+
+// --- أسئلة إضافية متنوعة ---
+{ question: "من هو الرئيس الجزائري الذي أطلق مشروع 'السد الأخضر'؟", answers: ["أحمد بن بلة", "هواري بومدين", "الشاذلي بن جديد", "اليمين زروال"], correctAnswerIndex: 1 },
+{ question: "ما هو الاسم الرسمي للغة الأمازيغية في الدستور الجزائري؟", answers: ["الشاوية", "القبائلية", "تيفيناغ", "تمازيغت"], correctAnswerIndex: 3 },
+{ question: "في أي عام تم ترسيم 'يناير' كعطلة وطنية مدفوعة الأجر؟", answers: ["2015", "2016", "2017", "2018"], correctAnswerIndex: 3 },
+{ question: "من هو أول جزائري صعد إلى الفضاء؟", answers: ["لا يوجد", "نور الدين مليكشي", "بلقاسم حبة", "عبد القادر جريو"], correctAnswerIndex: 0 },
+{ question: "ما هي المدينة الجزائرية التي تلقب بـ 'عاصمة الغرب'؟", answers: ["تلمسان", "مستغانم", "سيدي بلعباس", "وهران"], correctAnswerIndex: 3 },
+{ question: "ما هو اللقب الذي أطلق على الروائي الجزائري 'مولود فرعون'؟", answers: ["عميد الأدب", "فيلسوف الرواية", "كاتب القبائل", "صوت الفقراء"], correctAnswerIndex: 2 },
+{ question: "ما هي أكبر شركة في الجزائر وإفريقيا من حيث الإيرادات؟", answers: ["سونلغاز", "موبيليس", "سوناطراك", "نفطال"], correctAnswerIndex: 2 }, 
+// --- الدفعة الثانية: الرياضة، الثقافة، الفن، والمطبخ (100 سؤال) ---
+// --- الرياضة الجزائرية ---
+{ question: "من هو أول رياضي جزائري يفوز بميدالية ذهبية في الألعاب الأولمبية؟", answers: ["نور الدين مرسلي", "توفيق مخلوفي", "حسيبة بولمرقة", "حسين سلطاني"], correctAnswerIndex: 2 },
+{ question: "في أي عام فازت الجزائر بكأس أمم إفريقيا لكرة القدم لأول مرة؟", answers: ["1988", "1990", "1992", "2019"], correctAnswerIndex: 1 },
+{ question: "ما هو الملعب الذي احتضن نهائي كأس إفريقيا 1990 بالجزائر؟", answers: ["ملعب مصطفى تشاكر", "ملعب 19 ماي 1956", "ملعب 5 جويلية 1962", "ملعب ميلود هدفي"], correctAnswerIndex: 2 },
+{ question: "من هو اللاعب الجزائري الوحيد الذي فاز بجائزة الكرة الذهبية الإفريقية 3 مرات؟", answers: ["لخضر بلومي", "رابح ماجر", "رياض محرز", "مصطفى دحلب"], correctAnswerIndex: 0 },
+{ question: "ضد أي منتخب سجل رياض محرز هدفه الشهير من ركلة حرة في نصف نهائي كأس إفريقيا 2019؟", answers: ["السنغال", "كوت ديفوار", "نيجيريا", "تونس"], correctAnswerIndex: 2 },
+{ question: "من هو العداء الجزائري الذي حمل الرقم القياسي العالمي في سباق 1500 متر لسنوات طويلة؟", answers: ["علي سعيدي سياف", "توفيق مخلوفي", "نور الدين مرسلي", "العربي بورعدة"], correctAnswerIndex: 2 },
+{ question: "ما هو النادي الجزائري الذي فاز بدوري أبطال إفريقيا عام 2014؟", answers: ["مولودية الجزائر", "شبيبة القبائل", "اتحاد العاصمة", "وفاق سطيف"], correctAnswerIndex: 3 },
+{ question: "من هو حارس مرمى المنتخب الجزائري في مونديال 2014 الذي تألق ضد ألمانيا؟", answers: ["محمد الأمين زماموش", "وهاب رايس مبولحي", "فوزي شاوشي", "عز الدين دوخة"], correctAnswerIndex: 1 },
+{ question: "في أي رياضة برزت البطلة الأولمبية نورية بنيدة مراح؟", answers: ["الجودو", "السباحة", "ألعاب القوى (1500م)", "المبارزة"], correctAnswerIndex: 2 },
+{ question: "ما هو لقب نادي مولودية الجزائر؟", answers: ["النسور", "العميد", "الكناري", "الحمراوة"], correctAnswerIndex: 1 },
+{ question: "من هو المدرب الذي قاد الجزائر للتأهل التاريخي للدور الثاني في مونديال 2014؟", answers: ["رابح سعدان", "جورج ليكنس", "كريستيان غوركوف", "وحيد حاليلوزيتش"], correctAnswerIndex: 3 },
+{ question: "ما هو اسم الملعب الجديد في وهران الذي استضاف ألعاب البحر الأبيض المتوسط؟", answers: ["ملعب أحمد زبانة", "ملعب ميلود هدفي", "ملعب 24 فبراير", "ملعب الحبيب بوعقل"], correctAnswerIndex: 1 },
+{ question: "من هو الملاكم الجزائري الذي فاز بأول ميدالية ذهبية أولمبية للجزائر في الملاكمة؟", answers: ["محمد بن قاسمية", "حسين سلطاني", "محمد علالو", "مصطفى موسى"], correctAnswerIndex: 1 },
+{ question: "ما هو أقدم نادي كرة قدم في الجزائر لا يزال نشطاً؟", answers: ["مولودية وهران", "شباب قسنطينة", "مولودية الجزائر", "اتحاد البليدة"], correctAnswerIndex: 2 },
+{ question: "كم مرة شاركت الجزائر في كأس العالم لكرة القدم (حتى 2022)؟", answers: ["3 مرات", "4 مرات", "5 مرات", "6 مرات"], correctAnswerIndex: 1 },
+{ question: "في أي رياضة اشتهر البطل الجزائري العربي بورعدة؟", answers: ["سباق الماراثون", "القفز الطويل", "العشاري", "رمي الرمح"], correctAnswerIndex: 2 },
+{ question: "ما هو لقب نادي شبيبة القبائل؟", answers: ["أسود جرجرة", "الكناري", "الحراش", "الزعيم"], correctAnswerIndex: 1 },
+{ question: "من هو اللاعب الذي سجل أول هدف للجزائر في تاريخ كأس العالم؟", answers: ["رابح ماجر", "لخضر بلومي", "جمال زيدان", "صالح عصاد"], correctAnswerIndex: 2 },
+{ question: "ما هي المدينة التي تعتبر معقل نادي 'وفاق سطيف'؟", answers: ["قسنطينة", "برج بوعريريج", "سطيف", "المسيلة"], correctAnswerIndex: 2 },
+{ question: "في أي أولمبياد فاز توفيق مخلوفي بذهبية 1500 متر؟", answers: ["بكين 2008", "لندن 2012", "ريو 2016", "طوكيو 2020"], correctAnswerIndex: 1 },
+
+// --- الثقافة، اللهجة والفنون ---
+{ question: "ماذا تعني كلمة 'يهدر' في اللهجة الجزائرية؟", answers: ["يضحك", "يأكل", "يتكلم", "يمشي"], correctAnswerIndex: 2 },
+{ question: "ماذا يقصد الجزائري بكلمة 'التريبورتور'؟", answers: ["الثلاجة", "دراجة نارية بثلاث عجلات", "جهاز التحكم عن بعد", "الحاسوب المحمول"], correctAnswerIndex: 1 },
+{ question: "ما هو 'المندول'؟", answers: ["طبق تقليدي", "لباس رجالي", "آلة موسيقية وترية", "نوع من الرقص"], correctAnswerIndex: 2 },
+{ question: "من هو كاتب رواية 'ابن الفقير' التي تصف حياة طفل في منطقة القبائل؟", answers: ["كاتب ياسين", "محمد ديب", "مولود فرعون", "الطاهر جاووت"], correctAnswerIndex: 2 },
+{ question: "ما هو نوع الموسيقى الأندلسية الذي تشتهر به مدينة قسنطينة؟", answers: ["الغرناطي", "الصنعة", "المالوف", "الحوزي"], correctAnswerIndex: 2 },
+{ question: "في اللهجة الجزائرية، ما هو 'الفطور'؟", answers: ["وجبة الصباح", "وجبة منتصف النهار (الغداء)", "وجبة المساء (العشاء)", "وجبة خفيفة"], correctAnswerIndex: 1 },
+{ question: "من هو الفنان التشكيلي الذي يعتبر من مؤسسي 'فن الإشارة' في الجزائر؟", answers: ["محمد خدة", "امحمد إيسياخم", "بشير يلس", "عبد القادر جريو"], correctAnswerIndex: 0 },
+{ question: "ماذا تعني كلمة 'طونوبيل' باللهجة الجزائرية؟", answers: ["طائرة", "دراجة", "حافلة", "سيارة"], correctAnswerIndex: 3 },
+{ question: "من هو 'عميد الأغنية الشعبية (الشعبي)' في الجزائر؟", answers: ["دحمان الحراشي", "الحاج محمد العنقى", "الهاشمي قروابي", "كمال مسعودي"], correctAnswerIndex: 1 },
+{ question: "ما هو كتاب الأديب الجزائري 'ياسمينة خضرا' الذي حقق شهرة عالمية؟", answers: ["سنونوات كابول", "نجمة", "الدار الكبيرة", "ريح الجنوب"], correctAnswerIndex: 0 },
+{ question: "ماذا تعني عبارة 'ساهل ماهل'؟", answers: ["صعب جداً", "مستحيل", "سهل للغاية", "ممكن"], correctAnswerIndex: 2 },
+{ question: "من هو المغني القبائلي العالمي الذي اشتهر بأغنية 'A Vava Inouva'؟", answers: ["سليمان عازم", "معطوب الوناس", "إيدير", "لونيس آيت منقلات"], correctAnswerIndex: 2 },
+{ question: "ما هو 'القشابي'؟", answers: ["نوع من الحلي", "لباس شتوي تقليدي للرجال", "غطاء للرأس", "إناء فخاري"], correctAnswerIndex: 1 },
+{ question: "من هو الروائي الذي كتب ثلاثية الجزائر: 'الدار الكبيرة'، 'الحريق'، 'النول'؟", answers: ["مولود فرعون", "محمد ديب", "كاتب ياسين", "رشيد بوجدرة"], correctAnswerIndex: 1 },
+{ question: "ماذا تعني كلمة 'الزعاف' في اللهجة الجزائرية؟", answers: ["الفرح", "الخوف", "الغضب", "الحزن"], correctAnswerIndex: 2 },
+{ question: "ما هو المهرجان السنوي للموسيقى الذي يقام في مدينة جميلة الأثرية؟", answers: ["مهرجان تيمقاد", "مهرجان جميلة العربي", "مهرجان وهران للفيلم", "مهرجان الموسيقى الأندلسية"], correctAnswerIndex: 1 },
+{ question: "من هو الرسام الذي اشتهر برسم 'الخيالة' و'الفانتازيا'؟", answers: ["محمد راسم", "إتيان (ناصر الدين) ديني", "بشير يلس", "امحمد إيسياخم"], correctAnswerIndex: 1 },
+{ question: "ماذا يعني مصطلح 'جورنان'؟", answers: ["يومية", "أسبوعية", "مجلة", "جريدة"], correctAnswerIndex: 3 },
+{ question: "في أي مدينة جزائرية تأسست فرقة 'بابيلون' الشهيرة؟", answers: ["وهران", "قسنطينة", "تلمسان", "الجزائر العاصمة"], correctAnswerIndex: 3 },
+{ question: "من هي الروائية الجزائرية التي فازت بجائزة البوكر العربية عن رواية 'ذاكرة الجسد'؟", answers: ["آسيا جبار", "أحلام مستغانمي", "زهور ونيسي", "جميلة زنير"], correctAnswerIndex: 1 },
+
+
+{ question: "كم عدد أعضاء 'لجنة الـ 22' التاريخية التي خططت للثورة؟", answers: ["6", "9", "22", "54"], correctAnswerIndex: 2 },
+{ question: "ما هو الاسم الذي أطلق على الولاية التاريخية الخامسة (وهران وضواحيها)؟", answers: ["الولاية الوهرانية", "الغرب الجزائري", "المنطقة المستقلة", "لا يوجد اسم محدد"], correctAnswerIndex: 0 },
+{ question: "من هو القائد الذي خلف مصطفى بن بولعيد على رأس الولاية الأولى (الأوراس) بعد استشهاده؟", answers: ["زيغود يوسف", "كريم بلقاسم", "العقيد شعباني", "عمر بن بولعيد"], correctAnswerIndex: 3 },
+{ question: "ما اسم الصحيفة السرية التي كانت لسان حال جبهة التحرير الوطني؟", answers: ["الشعب", "المجاهد", "الخبر", "الوطن"], correctAnswerIndex: 1 },
+{ question: "من هو أصغر أعضاء مجموعة الستة مفجري الثورة سناً؟", answers: ["ديدوش مراد", "رابح بيطاط", "العربي بن مهيدي", "محمد بوضياف"], correctAnswerIndex: 1 },
+{ question: "في أي دولة أوروبية كانت تتمركز 'فيدرالية جبهة التحرير'؟", answers: ["سويسرا", "إيطاليا", "إسبانيا", "فرنسا"], correctAnswerIndex: 3 },
+{ question: "ما هو الاسم الذي أطلق على معركة الجزائر العاصمة؟", answers: ["La Bataille d'Alger", "Opération Oiseau Bleu", "Le plan Challe", "La nuit des longs couteaux"], correctAnswerIndex: 0 },
+{ question: "من هي المجاهدة التي كانت مهمتها الرئيسية زرع القنابل في 'معركة الجزائر'؟", answers: ["جميلة بوحيرد", "حسيبة بن بوعلي", "زهور ونيسي", "آسيا جبار"], correctAnswerIndex: 1 },
+{ question: "ما هي الاتفاقية التي أنهت الحرب وأدت إلى استقلال الجزائر؟", answers: ["اتفاقية لوزان", "اتفاقية جنيف", "اتفاقية إيفيان", "اتفاقية أوسلو"], correctAnswerIndex: 2 },
+{ question: "متى تم إيقاف إطلاق النار رسمياً في الجزائر؟", answers: ["5 جويلية 1962", "1 نوفمبر 1954", "19 مارس 1962", "20 أوت 1956"], correctAnswerIndex: 2 },
+
+// --- الجغرافيا والبيئة ---
+{ question: "ما هو أطول وادٍ في الجزائر؟", answers: ["واد الشلف", "واد سيبوس", "واد الصومام", "واد مجردة"], correctAnswerIndex: 0 },
+{ question: "ما هو أكبر منتزه وطني في الجزائر من حيث المساحة؟", answers: ["منتزه جرجرة", "منتزه قورايا", "منتزه طاسيلي ناجر", "منتزه بلزمة"], correctAnswerIndex: 2 },
+{ question: "ما اسم الرياح الجنوبية الحارة المحملة بالرمال التي تهب على شمال الجزائر؟", answers: ["الهابوب", "الخماسين", "السموم", "السيروكو (الشهيلي)"], correctAnswerIndex: 3 },
+{ question: "أين يقع 'شط ملغيغ'، أكثر نقطة انخفاضاً في الجزائر؟", answers: ["ولاية الوادي", "ولاية بسكرة", "ولاية ورقلة", "ولاية الأغواط"], correctAnswerIndex: 1 },
+{ question: "ما هو الحيوان الذي يعتبر شعار الحظيرة الوطنية للقالة؟", answers: ["الأيل البربري", "الفنك", "الضبع المخطط", "غزال كوفييه"], correctAnswerIndex: 0 },
+{ question: "الجزائر هي عاشر أكبر دولة في العالم، فما هي مرتبتها في إفريقيا؟", answers: ["الأولى", "الثانية", "الثالثة", "الرابعة"], correctAnswerIndex: 0 },
+{ question: "ما هو النوع النباتي الذي يغطي مساحات شاسعة في أقصى جنوب الجزائر؟", answers: ["أشجار الأرز", "أشجار الفلين", "نبات الحلفاء", "لا شيء تقريباً (صحراء قاحلة)"], correctAnswerIndex: 3 },
+{ question: "ما هو الاسم الذي يطلق على السهول العليا في الجزائر؟", answers: ["الهضاب العليا", "الساحل", "التل", "الصحراء"], correctAnswerIndex: 0 },
+{ question: "أي من هذه المدن تقع على 'خط غرينتش'؟", answers: ["وهران", "مستغانم", "الجزائر العاصمة", "تلمسان"], correctAnswerIndex: 1 },
+{ question: "ما هي الظاهرة الطبيعية التي تحدث في صحراء تندوف وتجذب السياح؟", answers: ["البراكين الخامدة", "الورود الرملية", "الشفق القطبي", "العيون الحارة"], correctAnswerIndex: 1 },
+
+
+{ question: "من هو أشهر ملك أمازيغي وحد نوميديا؟", answers: ["سيفاكس", "يوغرطة", "ماسينيسا", "يوبا الثاني"], correctAnswerIndex: 2 },
+{ question: "ما هي المدينة التي كانت عاصمة للملك سيفاكس في نوميديا الغربية؟", answers: ["سيرتا", "هيبون", "قرطاجنة", "روسيكادا"], correctAnswerIndex: 0 },
+{ question: "ضد أي إمبراطورية قاد يوغرطة حربه الشهيرة؟", answers: ["الإمبراطورية الفينيقية", "الإمبراطورية الرومانية", "الإمبراطورية البيزنطية", "الإمبراطورية اليونانية"], correctAnswerIndex: 1 },
+{ question: "من هي الملكة الأمازيغية التي خلفت الملك أكسل (كسيلة) في مقاومة الفتح الإسلامي؟", answers: ["تين هينان", "الكاهنة ديهيا", "لالة فاطمة نسومر", "تازيري"], correctAnswerIndex: 1 },
+{ question: "ما اسم العاصمة التي بناها بولوغين بن زيري بأمر من والده مؤسس الدولة الزيرية؟", answers: ["أشير", "الجزائر", "المهدية", "بجاية"], correctAnswerIndex: 1 },
+{ question: "ما هي الدولة التي أسسها عبد الرحمن بن رستم في منطقة تيهرت (تيارت حالياً)؟", answers: ["الدولة الزيرية", "الدولة الرستمية", "الدولة الموحدية", "الدولة الحفصية"], correctAnswerIndex: 1 },
+{ question: "في عهد أي دولة إسلامية أصبحت بجاية مركز إشعاع علمي كبير؟", answers: ["المرابطية", "الحمادية", "الزيانية", "الموحدية"], correctAnswerIndex: 1 },
+{ question: "من هو القائد البحري الذي حرر الجزائر من الاحتلال الإسباني وجعلها تابعة للدولة العثمانية؟", answers: ["خير الدين بربروس", "حسن آغا", "صالح رايس", "علي بتشين"], correctAnswerIndex: 0 },
+{ question: "ماذا كانت تسمى مكانة حاكم الجزائر في العهد العثماني؟", answers: ["باشا", "باي", "داي", "سلطان"], correctAnswerIndex: 2 },
+{ question: "ما هي الحادثة التي اتخذتها فرنسا ذريعة لاحتلال الجزائر عام 1830؟", answers: ["حادثة المروحة", "قضية الديون", "القرصنة في المتوسط", "مهاجمة حصن فرنسي"], correctAnswerIndex: 0 },
+
+{ question: "ما هو الرمز البريدي لولاية أدرار؟", answers: ["01000", "02000", "03000", "04000"], correctAnswerIndex: 0 },
+{ question: "بماذا تشتهر ولاية الشلف تاريخياً؟", answers: ["بناء السفن", "صناعة الفخار", "مقاومة الأمير عبد القادر", "بزلزال الأصنام 1980"], correctAnswerIndex: 3 },
+{ question: "من أي ولاية ينحدر المفكر مالك بن نبي؟", answers: ["قسنطينة", "سطيف", "تبسة", "عنابة"], correctAnswerIndex: 2 },
+{ question: "ما هي المدينة التي كانت عاصمة لمملكة نوميديا في ولاية قسنطينة؟", answers: ["تيقورين", "هيبون", "سيرتا", "كويكول"], correctAnswerIndex: 2 },
+{ question: "ما هو الاسم القديم لمدينة أم البواقي؟", answers: ["مادور", "كانوبيس", "ماكوماداس", "عين البيضاء"], correctAnswerIndex: 2 },
+{ question: "أين يقع ضريح إيمدغاسن الأثري؟", answers: ["ولاية خنشلة", "ولاية باتنة", "ولاية تبسة", "ولاية ميلة"], correctAnswerIndex: 1 },
+{ question: "ما هي الولاية التي تُعرف بـ 'بوابة الصحراء'؟",
+answers: ["الأغواط", "غرداية", "بسكرة", "الوادي"], correctAnswerIndex: 2 },
+{ question: "في أي ولاية يقع جبل عيسى، أعلى قمة في الأطلس الصحراوي؟", answers: ["النعامة", "البيض", "بشار", "الأغواط"], correctAnswerIndex: 0 },
+{ question: "ما هي الولاية التي كانت عاصمة للدولة الزيرية؟", answers: ["الجزائر", "المدية", "بجاية", "تيزي وزو"], correctAnswerIndex: 2 },
+{ question: "ما هي الولاية التي تضم أكبر عدد من البلديات في الجزائر؟", answers: ["سطيف", "تيزي وزو", "الشلف", "وهران"], correctAnswerIndex: 1 },
+{ question: "ما هي أعلى قمة في جبال جرجرة بولاية تيزي وزو؟", answers: ["تاهات", "شيليا", "لالة خديجة", "زاكار"], correctAnswerIndex: 2 },
+{ question: "في أي ولاية يقع سد بني هارون، أكبر سد في الجزائر؟", answers: ["جيجل", "سكيكدة", "ميلة", "قسنطينة"], correctAnswerIndex: 2 },
+{ question: "ما هي الولاية التي تشتهر بإنتاج الفلين؟", answers: ["عنابة", "سكيكدة", "جيجل", "الطارف"], correctAnswerIndex: 2 },
+{ question: "ولاية سطيف معروفة بآثارها الرومانية في مدينة جميلة، فما هو اسمها الروماني؟", answers: ["Cuicul", "Hippo Regius", "Timgad", "Cirta"], correctAnswerIndex: 0 },
+{ question: "بماذا تشتهر ولاية سعيدة؟", answers: ["بالحمامات المعدنية", "بالزراعة الصحراوية", "بصناعة السفن", "بمناجم الذهب"], correctAnswerIndex: 0 },
+{ question: "ما هي الولاية التي تضم ميناء جن جن؟", answers: ["سكيكدة", "بجاية", "جيجل", "عنابة"], correctAnswerIndex: 2 },
+{ question: "من أي ولاية ينحدر البطل 'سي الحواس'؟", answers: ["المسيلة", "بسكرة", "الجلفة", "الأغواط"], correctAnswerIndex: 1 },
+{ question: "ما هي الولاية التي كانت عاصمة بايلك الشرق؟", answers: ["عنابة", "سكيكدة", "قسنطينة", "سطيف"], correctAnswerIndex: 2 },
+{ question: "من أي ولاية هو أصل طبق 'الشخشوخة'؟", answers: ["قسنطينة", "المسيلة", "باتنة", "بسكرة"], correctAnswerIndex: 1 },
+{ question: "في أي ولاية تقع قلعة بني حماد؟", answers: ["سطيف", "برج بوعريريج", "المسيلة", "البويرة"], correctAnswerIndex: 2 },
+{ question: "بماذا تشتهر ولاية بومرداس؟", answers: ["بشواطئها الصخرية", "بمركز الأبحاث النووية", "بمينائها النفطي", "بجامعتها وكارثة الزلزال"], correctAnswerIndex: 3 },
+{ question: "في أي ولاية تقع منطقة 'تيكجدة' السياحية؟", answers: ["البويرة", "تيزي وزو", "بجاية", "سطيف"], correctAnswerIndex: 0 },
+{ question: "ما هي أعلى قمة في الجزائر وتقع في ولاية تمنراست؟", answers: ["شيليا", "لالة خديجة", "تاهات", "جبل عيسى"], correctAnswerIndex: 2 },
+{ question: "بماذا تشتهر ولاية تبسة تاريخياً؟", answers: ["بمقاومة الفاطميين", "بكونها عاصمة رومانية", "بأسوارها البيزنطية وكنيستها", "بمقاومة الأمير عبد القادر"], correctAnswerIndex: 2 },
+{ question: "ما هي الولاية التي كانت عاصمة الدولة الزيانية؟", answers: ["وهران", "معسكر", "تلمسان", "سيدي بلعباس"], correctAnswerIndex: 2 },
+{ question: "ما هي الولاية التي تضم 'غابات الأرز' الشهيرة في ثنية الحد؟", answers: ["المدية", "عين الدفلى", "تيسمسيلت", "الشلف"], correctAnswerIndex: 2 },
+{ question: "ما هي الولاية التي تلقب بـ 'عاصمة الألف قبة وقبة'؟", answers: ["بسكرة", "غرداية", "الوادي", "ورقلة"], correctAnswerIndex: 2 },
+{ question: "ما هي الولاية التي تحتضن آثار مدينة تيمقاد الرومانية؟", answers: ["أم البواقي", "خنشلة", "باتنة", "تبسة"], correctAnswerIndex: 1 },
+{ question: "بماذا تشتهر ولاية سوق أهراس؟", answers: ["بكونها مسقط رأس القديس أوغسطين", "بإنتاج الحمضيات", "بصناعة السيارات", "بمناجم الحديد"], correctAnswerIndex: 0 },
+{ question: "ما هي الولاية التي تضم مدينة شرشال وميناءها التاريخي؟", answers: ["الجزائر", "بومرداس", "تيبازة", "الشلف"], correctAnswerIndex: 2 },
+{ question: "أين يقع الضريح الملكي الموريتاني (قبر الرومية)؟", answers: ["ولاية الجزائر", "ولاية تيبازة", "ولاية بومرداس", "ولاية الشلف"], correctAnswerIndex: 1 },
+{ question: "ما هي الولاية التي تُعرف بكونها عاصمة 'بايلك التيطري'؟", answers: ["الجزائر", "البليدة", "المدية", "عين الدفلى"], correctAnswerIndex: 2 },
+{ question: "بماذا تشتهر ولاية مستغانم؟", answers: ["بمهرجان الموسيقى الأندلسية", "بمهرجان مسرح الهواة", "بزراعة الكروم", "بأضرحة الصوفية"], correctAnswerIndex: 1 },
+{ question: "في أي ولاية تأسست 'نجمة شمال إفريقيا' على يد مصالي الحاج؟", answers: ["تلمسان", "الجزائر العاصمة", "قسنطينة", "سطيف"], correctAnswerIndex: 0 },
+{ question: "ما هي الولاية التي تضم مدينة 'حاسي مسعود' النفطية؟", answers: ["غرداية", "الأغواط", "ورقلة", "إليزي"], correctAnswerIndex: 2 },
+{ question: "ولاية البيض هي حلقة وصل بين الهضاب والصحراء، فما هي أهم سلسلة جبلية فيها؟", answers: ["جبال القصور", "جبال عمور", "جبال الأوراس", "جبال الونشريس"], correctAnswerIndex: 1 },
+{ question: "بماذا تشتهر ولاية إليزي؟", answers: ["بالبترول", "بالتمور", "بالنقوش الصخرية في طاسيلي ناجر", "بالزراعة"], correctAnswerIndex: 2 },
+{ question: "ما هي الولاية التي تعتبر عاصمة صناعة الإلكترونيك في الجزائر؟", answers: ["سطيف", "الجزائر", "برج بوعريريج", "وهران"], correctAnswerIndex: 2 },
+{ question: "ما هي الولاية التي تحتضن 'واحة تاغيت' الساحرة؟", answers: ["أدرار", "بشار", "تندوف", "النعامة"], correctAnswerIndex: 1 },
+{ question: "بماذا تشتهر ولاية الطارف؟", answers: ["بالحديقة الوطنية للقالة وبحيراتها", "بالصيد البحري", "بالصناعة الثقيلة", "بزراعة الحبوب"], correctAnswerIndex: 0 },
+{ question: "ما هي الولاية التي تضم أكبر منجم للحديد في الجزائر (منجم الونزة)؟", answers: ["عنابة", "قالمة", "تبسة", "سوق أهراس"], correctAnswerIndex: 2 },
+{ question: "ما هي الولاية التي تشتهر بحماماتها المعدنية مثل 'حمام المسخوطين'؟", answers: ["سكيكدة", "عنابة", "قالمة", "قسنطينة"], correctAnswerIndex: 2 },
+{ question: "بماذا تشتهر ولاية غليزان؟", answers: ["زراعة الزيتون", "سهل مينا الزراعي", "صناعة النسيج", "مقاومة بوعمامة"], correctAnswerIndex: 1 },
+{ question: "ما هي الولاية التي كانت معقلاً مهماً خلال ثورة المقراني؟", answers: ["سطيف", "المسيلة", "برج بوعريريج", "بجاية"], correctAnswerIndex: 2 },
+{ question: "ما هي الولاية التي تشتهر بـ'زربية بابار' التقليدية؟", answers: ["باتنة", "بسكرة", "خنشلة", "أم البواقي"], correctAnswerIndex: 2 },
+{ question: "ما هي الولاية التي تضم مقر الزاوية التيجانية؟", answers: ["الجلفة", "الأغواط", "البيض", "بسكرة"], correctAnswerIndex: 1 },
+{ question: "بماذا تشتهر ولاية عين الدفلى؟", answers: ["بإنتاج البطاطا والتفاح", "بالصناعات الغذائية", "بالسياحة الجبلية", "بالصيد"], correctAnswerIndex: 0 },
+{ question: "في أي ولاية يقع 'جبل محمل' الشهير في مقاومة الأوراس؟", answers: ["باتنة", "خنشلة", "تبسة", "أم البواقي"], correctAnswerIndex: 1 },
+{ question: "بماذا تشتهر ولاية تندوف؟", answers: ["بالتمور", "بسباق المهاري", "بمخيمات اللاجئين الصحراويين ومناجم غار جبيلات", "بالسياحة"], correctAnswerIndex: 2 },
+{ question: "ما هي الولاية الجديدة التي كانت تابعة لولاية أدرار؟", answers: ["بني عباس", "تيميمون", "برج باجي مختار", "عين صالح"], correctAnswerIndex: 2 },
+{ question: "ما هي الولاية الجديدة التي تشتهر بواحات النخيل والقصور الحمراء؟", answers: ["برج باجي مختار", "تيميمون", "عين صالح", "جانت"], correctAnswerIndex: 1 },
+{ question: "ما هي الولاية الجديدة التي كانت جزءاً من ولاية بشار؟", answers: ["بني عباس", "تيميمون", "المنيعة", "أولاد جلال"], correctAnswerIndex: 0 },
+{ question: "من أي ولاية تم فصل ولاية أولاد جلال الجديدة؟", answers: ["المسيلة", "الجلفة", "بسكرة", "الأغواط"], correctAnswerIndex: 2 },
+{ question: "ما هي الولاية الجديدة التي تعتبر بوابة الصحراء الكبرى الجنوبية؟", answers: ["جانت", "برج باجي مختار", "عين صالح", "عين قزام"], correctAnswerIndex: 2 },
+{ question: "ما هي الولاية الجديدة التي تقع في أقصى جنوب الجزائر على الحدود مع النيجر؟", answers: ["جانت", "عين صالح", "برج باجي مختار", "عين قزام"], correctAnswerIndex: 3 },
+{ question: "ولاية المغير الجديدة كانت تابعة لأي ولاية؟", answers: ["بسكرة", "ورقلة", "الوادي", "غرداية"], correctAnswerIndex: 2 },
+{ question: "ما هي الولاية الجديدة التي تشتهر بإنتاج التمور وبحيراتها المالحة؟", answers: ["أولاد جلال", "المغير", "المنيعة", "تقرت"], correctAnswerIndex: 3 },
+{ question: "ما هي الولاية الجديدة التي تقع جنوب غرداية وتعرف بواحاتها؟", answers: ["المنيعة", "تقرت", "المغير", "أولاد جلال"], correctAnswerIndex: 0 },
+{ question: "ولاية جانت الجديدة، بماذا تشتهر عالمياً؟", answers: ["بالبترول", "بالطاسيلي ناجر", "بزراعة القمح", "بجامعتها"], correctAnswerIndex: 1 },
+{question: "ما هي الولاية التي تُعرف بـ 'بوابة الصحراء'؟",
+answers: ["الأغواط", "غرداية", "بسكرة", "الوادي"], correctAnswerIndex: 2 },
+        { question: "في أي سنة نالت الجزائر استقلالها؟", answers: ["1954", "1960", "1962", "1965"], correctAnswerIndex: 2 },
+        { question: "ما هي عاصمة الجزائر؟", answers: ["وهران", "قسنطينة", "عنابة", "الجزائر العاصمة"], correctAnswerIndex: 3 },
+        { question: "من هو مؤسس الدولة الجزائرية الحديثة ويعتبر بطل المقاومة ضد الاستعمار الفرنسي؟", answers: ["هواري بومدين", "الأمير عبد القادر", "أحمد بن بلة", "مصطفى بن بولعيد"], correctAnswerIndex: 1 },
+        { question: "ما هو أعلى جبل في الجزائر؟", answers: ["جبل شيليا", "جبل لالة خديجة", "جبل تاهات", "جبل عيسى"], correctAnswerIndex: 2 },
+        { question: "تُعرف مدينة قسنطينة بلقب مدينة...؟", answers: ["الباهية", "الجسور المعلقة", "الغزلان", "الورود"], correctAnswerIndex: 1 },
+        { question: "ما هو الطبق الوطني في الجزائر الذي يُقدم غالبًا يوم الجمعة؟", answers: ["الشخشوخة", "الكسكس", "الرشتة", "المثوم"], correctAnswerIndex: 1 },
+        { question: "ما اسم النشيد الوطني الجزائري؟", answers: ["من جبالنا", "جزائرنا", "قسماً", "فداء الجزائر"], correctAnswerIndex: 2 },
+        { question: "أي من هذه المواقع الأثرية الرومانية مدرج ضمن قائمة اليونسكو للتراث العالمي؟", answers: ["تيمقاد", "شرشال", "قلعة بني حماد", "كل ما سبق"], correctAnswerIndex: 3 },
+        { question: "في أي ولاية تقع حظيرة الطاسيلي ناجر المشهورة برسوماتها الصخرية؟", answers: ["تمنراست", "أدرار", "إليزي", "ورقلة"], correctAnswerIndex: 2 },
+        { question: "من هو اللاعب الجزائري الذي سجل هدفاً تاريخياً بالكعب في نهائي دوري أبطال أوروبا 1987؟", answers: ["لخضر بلومي", "صالح عصاد", "رابح ماجر", "جمال مناد"], correctAnswerIndex: 2 },
+        { question: "ما هي العملة الرسمية للجزائر؟", answers: ["الفرنك", "الدينار", "الدرهم", "الليرة"], correctAnswerIndex: 1 },
+        { question: "من هي الكاتبة الجزائرية الشهيرة صاحبة رواية 'النسيان'؟", answers: ["أحلام مستغانمي", "آسيا جبار", "جميلة صحراوي", "مليكة مقدم"], correctAnswerIndex: 0 },
+        { question: "ما هو نوع الموسيقى الذي اشتهرت به مدينة وهران عالمياً؟", answers: ["الشعبي", "الأندلسي", "الراي", "المالوف"], correctAnswerIndex: 2 },
+        { question: "ما اسم أكبر صحراء في العالم والتي يقع جزء كبير منها في الجزائر؟", answers: ["صحراء غوبي", "الصحراء الكبرى", "صحراء كالاهاري", "الصحراء العربية"], correctAnswerIndex: 1 },
+        { question: "من هو أول رئيس للجزائر بعد الاستقلال؟", answers: ["أحمد بن بلة", "هواري بومدين", "الشاذلي بن جديد", "محمد بوضياف"], correctAnswerIndex: 0 },
+        { question: "ما اسم النصب التذكاري الشهير في الجزائر العاصمة الذي يخلد ذكرى شهداء الثورة؟", answers: ["مقام الشهيد", "برج الساعة", "حصن 23", "قصر الرياس"], correctAnswerIndex: 0 },
+        { question: "في أي عام فاز المنتخب الجزائري لكرة القدم بكأس أمم أفريقيا للمرة الأولى؟", answers: ["1982", "2019", "1990", "2004"], correctAnswerIndex: 2 },
+        { question: "ما هي الولاية التي تحمل الرقم 1 في الترقيم الإداري الجزائري؟", answers: ["الجزائر", "تمنراست", "أدرار", "وهران"], correctAnswerIndex: 2 },
+        { question: "من هو العالم الجزائري في الفيزياء الذي عمل في وكالة ناسا؟", answers: ["نور الدين مليكشي", "بلقاسم حبة", "محمد أركون", "مالك بن نبي"], correctAnswerIndex: 0 },
+        { question: "ماذا يمثل اللون الأخضر في علم الجزائر؟", answers: ["الإسلام", "دماء الشهداء", "الأرض والازدهار", "السلام"], correctAnswerIndex: 2 },
+        { question: "أي من هذه المدن تقع على ساحل البحر الأبيض المتوسط؟", answers: ["سطيف", "تلمسان", "بجاية", "بسكرة"], correctAnswerIndex: 2 },
+        { question: "من هي 'جميلة بوحيرد'؟", answers: ["مغنية", "كاتبة", "مناضلة في ثورة التحرير", "سياسية"], correctAnswerIndex: 2 },
+        { question: "ما اسم أكبر شركة للمحروقات في الجزائر وأفريقيا؟", answers: ["نفطال", "سوناطراك", "سونلغاز", "موبيليس"], correctAnswerIndex: 1 },
+        { question: "ما هو الرمز الهاتفي الدولي للجزائر؟", answers: ["+216", "+212", "+213", "+218"], correctAnswerIndex: 2 },
+        { question: "من هو مؤلف موسيقى النشيد الوطني الجزائري 'قسماً'؟", answers: ["محمد فوزي", "محمد عبد الوهاب", "مفدي زكريا", "علي معاشي"], correctAnswerIndex: 0 },
+        { question: "في أي ولاية تقع مدينة 'تاغيت' السياحية المعروفة بكثبانها الرملية؟", answers: ["بشار", "النعامة", "البيض", "أدرار"], correctAnswerIndex: 0 },
+        { question: "أي من هؤلاء الرؤساء حكم الجزائر لأطول فترة؟", answers: ["هواري بومدين", "عبد العزيز بوتفليقة", "الشاذلي بن جديد", "أحمد بن بلة"], correctAnswerIndex: 1 },
+        { question: "تُعرف الجزائر عالمياً بإنتاج...؟", answers: ["التمور (دقلة نور)", "الزيتون", "العنب", "الحمضيات"], correctAnswerIndex: 0 },
+        { question: "ما هي أكبر ولاية من حيث عدد السكان؟", answers: ["وهران", "سطيف", "الجزائر", "قسنطينة"], correctAnswerIndex: 2 },
+        { question: "من هو الشاعر الذي كتب كلمات نشيد 'قسماً' داخل السجن؟", answers: ["محمد العيد آل خليفة", "مفدي زكريا", "أبو القاسم الشابي", "جان عمروش"], correctAnswerIndex: 1 },
+        { question: "ماذا كانت تسمى الجزائر في العهد الروماني؟", answers: ["قرطاج", "نوميديا", "موريتانيا القيصرية", "إيكوزيوم"], correctAnswerIndex: 2 },
+        { question: "أي رياضي جزائري فاز بذهبية 1500 متر في أولمبياد برشلونة 1992؟", answers: ["حسيبة بولمرقة", "نور الدين مرسلي", "توفيق مخلوفي", "العربي بورعدة"], correctAnswerIndex: 1 },
+        { question: "ما اسم القلعة التاريخية التي بناها العثمانيون في وهران؟", answers: ["قلعة المشور", "حصن سانتا كروز", "قلعة بني حماد", "قصبة الجزائر"], correctAnswerIndex: 1 },
+        { question: "في أي مجال اشتهر الكاتب 'مولود فرعون'؟", answers: ["الشعر العربي", "الرواية المكتوبة بالفرنسية", "المسرح", "التاريخ الإسلامي"], correctAnswerIndex: 1 },
+        { question: "ما اسم الوادي الذي يعتبر الأطول في الجزائر؟", answers: ["وادي الشلف", "وادي الصومام", "وادي سيبوس", "وادي مجردة"], correctAnswerIndex: 0 },
+        { question: "ما هي الحرفة التقليدية التي تشتهر بها مدينة غرداية؟", answers: ["صناعة النحاس", "صناعة الفخار", "صناعة الزرابي", "صناعة الحلي الفضية"], correctAnswerIndex: 2 },
+        { question: "من هو 'علي لابوانت'؟", answers: ["سياسي", "شهيد من شهداء معركة الجزائر", "فنان تشكيلي", "قائد عسكري"], correctAnswerIndex: 1 },
+        { question: "أي فريق جزائري هو أول من فاز بدوري أبطال أفريقيا؟", answers: ["شبيبة القبائل", "مولودية الجزائر", "وفاق سطيف", "اتحاد العاصمة"], correctAnswerIndex: 1 },
+        { question: "ماذا يسمى اللباس التقليدي الرجالي الجزائري المكون من قطعة قماش واحدة؟", answers: ["القشابية", "البرنوس", "الجبادور", "البذلة"], correctAnswerIndex: 1 },
+        { question: "في أي عام وقعت أحداث 'أكتوبر 1988' التي أدت إلى التعددية السياسية؟", answers: ["1986", "1990", "1988", "1991"], correctAnswerIndex: 2 },
+        { question: "ما هي المدينة التي يطلق عليها 'عاصمة الهضاب العليا'؟", answers: ["باتنة", "المسيلة", "سطيف", "برج بوعريريج"], correctAnswerIndex: 2 },
+        { question: "من هو الفنان الجزائري الذي غنى أغنية 'يا الرايح' واشتهرت عالمياً؟", answers: ["الشاب خالد", "رشيد طه", "الشاب مامي", "إيدير"], correctAnswerIndex: 1 },
+        { question: "ما اسم الحي التاريخي القديم في الجزائر العاصمة؟", answers: ["باب الواد", "الحراش", "القصبة", "الأبيار"], correctAnswerIndex: 2 },
+        { question: "أي من هذه الحلويات التقليدية تشتهر بها الجزائر في الأعياد؟", answers: ["الكنافة", "البقلاوة", "أم علي", "البسبوسة"], correctAnswerIndex: 1 },
+        { question: "من هو أول جزائري وعربي يصعد إلى الفضاء؟", answers: ["نور الدين مليكشي", "محمد فارس", "لم يحدث بعد", "بلقاسم حبة"], correctAnswerIndex: 2 },
+        { question: "ما هي الولاية التي تشتهر بإنتاج أجود أنواع الفلين؟", answers: ["جيجل", "سكيكدة", "عنابة", "الطارف"], correctAnswerIndex: 0 },
+        { question: "من هي أول امرأة عربية وأفريقية تفوز بميدالية ذهبية أولمبية؟", answers: ["آسيا جبار", "حسيبة بولمرقة", "نورية بنيدة مراح", "سعاد آيت سالم"], correctAnswerIndex: 1 },
+        { question: "في أي مدينة جزائرية يوجد ضريح الملك النوميدي ماسينيسا؟", answers: ["تيمقاد", "قسنطينة", "شرشال", "عنابة"], correctAnswerIndex: 1 },
+        { question: "ما هو الاسم القديم لمدينة عنابة؟", answers: ["هيبون", "سيرتا", "إيول", "كولو"], correctAnswerIndex: 0 },
+        { question: "ما هو الحيوان الذي يظهر في شعار الحماية المدنية الجزائرية؟", answers: ["نسر", "جمل", "أسد", "فنك"], correctAnswerIndex: 0 },
+        { question: "من قاد 'ثورة المقراني' عام 1871 ضد الاستعمار الفرنسي؟", answers: ["الشيخ بوعمامة", "الشيخ الحداد", "محمد المقراني", "الأمير عبد القادر"], correctAnswerIndex: 2 },
+        { question: "ما هي أكبر بحيرة طبيعية مالحة (شط) في الجزائر؟", answers: ["شط الحضنة", "شط ملغيغ", "شط الشرقي", "شط مروان"], correctAnswerIndex: 1 },
+        { question: "ما هو الطبق المصنوع من العجين المقطع والمطهو بالبخار ويقدم مع مرق اللحم أو الدجاج؟", answers: ["المحاجب", "الرشتة", "البركوكس", "الشخشوخة"], correctAnswerIndex: 1 },
+        { question: "في أي رياضة اشتهر الملاكم 'محمد بن قاسمية'؟", answers: ["الجودو", "الكاراتيه", "الملاكمة الإنجليزية", "الكيك بوكسينغ"], correctAnswerIndex: 2 },
+        { question: "من هو المخترع الجزائري الذي يملك أكثر من 1500 براءة اختراع في مجال الإلكترونيات؟", answers: ["توفيق زعيبط", "بلقاسم حبة", "محمد بوروبة", "عبد الله كنسول"], correctAnswerIndex: 1 },
+        { question: "ما اسم المضيق البحري الذي يفصل الجزائر عن إسبانيا؟", answers: ["مضيق صقلية", "مضيق جبل طارق", "مضيق بنما", "مضيق باب المندب"], correctAnswerIndex: 1 },
+        { question: "ما هي الولاية التي تُعرف بأنها 'عاصمة الأوراس'؟", answers: ["خنشلة", "تبسة", "باتنة", "أم البواقي"], correctAnswerIndex: 2 },
+        { question: "من هو مخرج فيلم 'معركة الجزائر' الشهير؟", answers: ["محمد لخضر حمينة", "جيلو بونتيكورفو", "مرزاق علواش", "أحمد راشدي"], correctAnswerIndex: 1 },
+        { question: "ماذا يسمى الشاي بالنعناع في الصحراء الجزائرية؟", answers: ["لاتاي", "الشاي الأخضر", "التاي", "شاي الصحراء"], correctAnswerIndex: 0 },
+        { question: "ما اسم الحديقة الوطنية التي تقع في جبال جرجرة؟", answers: ["حديقة قورايا", "حديقة بلزمة", "حديقة جرجرة الوطنية", "حديقة ثنية الحد"], correctAnswerIndex: 2 },
+        { question: "ماذا تعني كلمة 'أزول' في اللغة الأمازيغية؟", answers: ["شكراً", "مرحباً/سلام", "وداعاً", "نعم"], correctAnswerIndex: 1 },
+        { question: "من هو المفكر الجزائري صاحب كتاب 'شروط النهضة'؟", answers: ["محمد أركون", "مالك بن نبي", "مصطفى الأشرف", "عبد الحميد بن باديس"], correctAnswerIndex: 1 },
+        { question: "في أي عام انضمت الجزائر إلى منظمة أوبك للدول المصدرة للنفط؟", answers: ["1962", "1971", "1969", "1975"], correctAnswerIndex: 2 },
+        { question: "ما هو الاسم القديم لمدينة سكيكدة؟", answers: ["روسيكادا", "كولو", "سالداي", "هيبو ريجيوس"], correctAnswerIndex: 0 },
+        { question: "أي من هذه الآلات الموسيقية هي أساسية في موسيقى الشعبي؟", answers: ["الساكسفون", "البيانو", "المندول", "الكمان الكهربائي"], correctAnswerIndex: 2 },
+        { question: "ما هي الولاية التي تشتهر بوجود 'غابة العقبان'؟", answers: ["تيزي وزو", "مستغانم", "البليدة", "معسكر"], correctAnswerIndex: 2 },
+        { question: "من هي الشخصية التاريخية التي أسست 'جمعية العلماء المسلمين الجزائريين'؟", answers: ["البشير الإبراهيمي", "العربي التبسي", "عبد الحميد بن باديس", "الطيب العقبي"], correctAnswerIndex: 2 },
+        { question: "ما هي أكبر جامعة في الجزائر من حيث عدد الطلاب؟", answers: ["جامعة الجزائر 1", "جامعة وهران", "جامعة قسنطينة", "جامعة باب الزوار للعلوم والتكنولوجيا"], correctAnswerIndex: 3 },
+        { question: "ما هو الحيوان الصحراوي الصغير الذي يُعتبر رمزاً وطنياً غير رسمي للجزائر؟", answers: ["الغزال", "الجمل", "الفنك (ثعلب الصحراء)", "الضبع"], correctAnswerIndex: 2 },
+        { question: "في أي مدينة جزائرية يقام سنوياً مهرجان تيمقاد الدولي؟", answers: ["قسنطينة", "عنابة", "باتنة", "تلمسان"], correctAnswerIndex: 2 },
+        { question: "ما هي 'لالة فاطمة نسومر'؟", answers: ["شاعرة", "قائدة مقاومة شعبية", "فنانة", "سياسية"], correctAnswerIndex: 1 },
+        { question: "ما هو الاسم الذي يطلق على الخبز التقليدي الجزائري المسطح الذي يطهى على الطاجين؟", answers: ["المطلوع", "البطبوط", "الكسرة", "خبز الدار"], correctAnswerIndex: 2 },
+        { question: "من هو اللاعب الجزائري الحائز على الكرة الذهبية الأفريقية عام 2016؟", answers: ["إسلام سليماني", "ياسين براهيمي", "سفيان فيغولي", "رياض محرز"], correctAnswerIndex: 3 },
+        { question: "ما هي الولاية التي تحمل الرقم 31 في الترقيم الإداري الجزائري؟", answers: ["الجزائر", "وهران", "سطيف", "تيزي وزو"], correctAnswerIndex: 1 },
+        { question: "ما اسم الفيلم الجزائري الذي ترشح لجائزة الأوسكار لأفضل فيلم أجنبي عام 1969؟", answers: ["وقائع سنين الجمر", "معركة الجزائر", "Z", "ريح الأوراس"], correctAnswerIndex: 2 },
+        { question: "أي من هذه المدن كانت عاصمة للدولة الزيانية؟", answers: ["بجاية", "الجزائر", "تلمسان", "قسنطينة"], correctAnswerIndex: 2 },
+        { question: "ما هو 'الكاراكو'؟", answers: ["طبق تقليدي", "لباس تقليدي نسائي عاصمي", "رقصة شعبية", "آلة موسيقية"], correctAnswerIndex: 1 },
+        { question: "في أي ولاية يقع 'منبع حمام المسخوطين' المعدني؟", answers: ["قالمة", "سكيكدة", "سوق أهراس", "عنابة"], correctAnswerIndex: 0 },
+        { question: "ماذا كان اسم الجزائر قبل أن يسميها العثمانيون بهذا الاسم؟", answers: ["جزائر بني مزغنة", "إيكوزيوم", "نوميديا", "المغرب الأوسط"], correctAnswerIndex: 0 },
+        { question: "من هو الرئيس الجزائري الذي اغتيل عام 1992؟", answers: ["علي كافي", "محمد بوضياف", "الشاذلي بن جديد", "اليامين زروال"], correctAnswerIndex: 1 },
+        { question: "ما هي أكلة 'الزفيطي' التي تشتهر بها منطقة بوسعادة؟", answers: ["حساء", "طبق حار جداً بالخبز والفلفل", "حلوى", "عصيدة"], correctAnswerIndex: 1 },
+        { question: "أي رياضي جزائري فاز بذهبية 1500 متر في أولمبياد لندن 2012؟", answers: ["نور الدين مرسلي", "العربي بورعدة", "توفيق مخلوفي", "حسيبة بولمرقة"], correctAnswerIndex: 2 },
+        { question: "ما هو الاسم الآخر لمدينة 'تيكجدة' السياحية؟", answers: ["عروس جرجرة", "لؤلؤة المتوسط", "جنة الصحراء", "شرفة البلقان"], correctAnswerIndex: 0 },
+        { question: "من هو الفنان الذي يُلقب بـ 'عميد الأغنية الشعبية' (الشعبي)؟", answers: ["الحاج محمد العنقة", "دحمان الحراشي", "عمر الزاهي", "كمال مسعودي"], correctAnswerIndex: 0 },
+        { question: "ما هي المادة الأولية التي تعد أساس الاقتصاد الجزائري؟", answers: ["الزراعة", "السياحة", "الصناعة", "المحروقات (نفط وغاز)"], correctAnswerIndex: 3 },
+        { question: "ما هي الولاية المعروفة بـ 'عاصمة الغرب الجزائري'؟", answers: ["تلمسان", "مستغانم", "وهران", "سيدي بلعباس"], correctAnswerIndex: 2 },
+        { question: "في أي سنة تأسس فريق جبهة التحرير الوطني لكرة القدم؟", answers: ["1954", "1962", "1958", "1960"], correctAnswerIndex: 2 },
+        { question: "ما هي 'التويزة' في الثقافة الجزائرية؟", answers: ["نوع من الشعر", "احتفال ديني", "عمل تطوعي جماعي", "لباس تقليدي"], correctAnswerIndex: 2 },
+        { question: "من هو الروائي الجزائري مؤلف ثلاثية 'الدار الكبيرة'، 'الحريق'، و'النول'؟", answers: ["محمد ديب", "كاتب ياسين", "الطاهر وطار", "واسيني الأعرج"], correctAnswerIndex: 0 },
+        { question: "ما هي الولاية التي يقع بها جسر 'سيدي مسيد' المعلق؟", answers: ["الجزائر", "جيجل", "قسنطينة", "سكيكدة"], correctAnswerIndex: 2 },
+        { question: "ماذا يسمى الزي التقليدي للرجال في منطقة الطوارق بالجزائر؟", answers: ["الجلابة", "البرنوس", "الجبة", "التاكلموست والشيش"], correctAnswerIndex: 3 },
+        { question: "من هو الرئيس الذي أطلق مشروع 'السد الأخضر' في السبعينيات؟", answers: ["أحمد بن بلة", "هواري بومدين", "الشاذلي بن جديد", "عبد العزيز بوتفليقة"], correctAnswerIndex: 1 },
+        { question: "ما هو الاسم القديم لمدينة بجاية؟", answers: ["كولو", "سالداي", "روسيكادا", "إجيلجيلي"], correctAnswerIndex: 1 },
+        { question: "أي كاتب جزائري فاز بجائزة غونكور، أرفع الجوائز الأدبية الفرنسية؟", answers: ["ياسمينة خضرا", "كمال داود", "بومدين بلكبير", "لم يفز بها أي جزائري"], correctAnswerIndex: 1 },
+        { question: "ما هي المدينة التي تشتهر بصناعة 'سكين بوسعادة' التقليدي؟", answers: ["بوسعادة", "الجلفة", "الأغواط", "غرداية"], correctAnswerIndex: 0 },
+        { question: "في أي عام تم افتتاح مترو الجزائر العاصمة؟", answers: ["2005", "2015", "2011", "2009"], correctAnswerIndex: 2 },
+        { question: "ما اسم أكبر ميناء تجاري في الجزائر؟", answers: ["ميناء وهران", "ميناء الجزائر", "ميناء عنابة", "ميناء سكيكدة"], correctAnswerIndex: 1 },
+        { question: "ما هي الولاية التي يقع فيها 'قصر المشور' الزياني؟", answers: ["وهران", "معسكر", "تلمسان", "سيدي بلعباس"], correctAnswerIndex: 2 },
+        { question: "من هو المطرب القبائلي الشهير صاحب أغنية 'A Vava Inouva'؟", answers: ["معطوب الوناس", "سليمان عازم", "إيدير", "آيت منقلات"], correctAnswerIndex: 2 },
+        { question: "ما هي اتفاقيات إيفيان؟", answers: ["اتفاقية سلام مع المغرب", "اتفاقية لوقف إطلاق النار وإنهاء حرب التحرير", "اتفاقية تجارية مع أوروبا", "اتفاقية ترسيم الحدود"], correctAnswerIndex: 1 },
+        { question: "ما هو الطبق الجزائري المصنوع من الفول والزيت ويؤكل خاصة في الشتاء؟", answers: ["البيصارة", "اللوبيا", "العدس", "الحريرة"], correctAnswerIndex: 0 },
+        { question: "كم عدد ولايات الجزائر حالياً (بعد التقسيم الإداري الأخير)؟", answers: ["48", "50", "58", "60"], correctAnswerIndex: 2 },
+        { question: "ما هي الولاية التي تشتهر بإنتاج السيراميك والآجر؟", answers: ["بومرداس", "البليدة", "تيبازة", "سطيف"], correctAnswerIndex: 1 },
+        { question: "من هو 'سي محند أومحند'؟", answers: ["مقاوم", "سياسي", "شاعر قبائلي كبير", "مغني راي"], correctAnswerIndex: 2 },
+        { question: "ما اسم المسجد الكبير والحديث في الجزائر العاصمة الذي يعد من أكبر مساجد العالم؟", answers: ["جامع كتشاوة", "المسجد الكبير", "جامع الجزائر", "مسجد الأمير عبد القادر"], correctAnswerIndex: 2 },
+        { question: "أي من هذه المدن كانت عاصمة للدولة الحمادية؟", answers: ["الجزائر", "قلعة بني حماد", "بجاية", "قسنطينة"], correctAnswerIndex: 1 },
+        { question: "ما هو 'المحاجب'؟", answers: ["نوع من الحلوى", "فطائر رقيقة محشوة بالبصل والطماطم", "حساء", "مشروب غازي"], correctAnswerIndex: 1 },
+        { question: "في أي ولاية توجد آثار 'جميلة' الرومانية؟", answers: ["قالمة", "باتنة", "سطيف", "ميلة"], correctAnswerIndex: 2 },
+        { question: "من هو بطل العالم في الجيدو ثلاث مرات، الجزائري عمار بن يخلف؟", answers: ["نعم، فاز بها 3 مرات", "لا، لم يفز بها", "فاز بها مرة واحدة", "فاز بها مرتين"], correctAnswerIndex: 1 },
+        { question: "ما هو الاسم القديم لمدينة شرشال؟", answers: ["إيول قيصرية", "هيبون", "سيرتا", "روسيكادا"], correctAnswerIndex: 0 },
+        { question: "ما هي المدينة التي كانت تسمى 'بوابة الصحراء'؟", answers: ["غرداية", "ورقلة", "بسكرة", "الأغواط"], correctAnswerIndex: 2 },
+        { question: "من هو العالم الجزائري الذي يعتبر أب الأنثروبولوجيا في الجزائر؟", answers: ["مولود معمري", "محمد أركون", "مالك علولة", "مصطفى الأشرف"], correctAnswerIndex: 0 },
+        { question: "ماذا يمثل اللون الأبيض في علم الجزائر؟", answers: ["دماء الشهداء", "الثورة", "الصحراء", "السلام والنقاء"], correctAnswerIndex: 3 },
+        { question: "في أي عام فاز المنتخب الجزائري بكأس أمم أفريقيا للمرة الثانية في تاريخه؟", answers: ["2014", "2017", "2019", "2021"], correctAnswerIndex: 2 },
+        { question: "ما هي 'الغيطة'؟", answers: ["لباس تقليدي", "أكلة شعبية", "آلة نفخ موسيقية تقليدية", "رقصة بدوية"], correctAnswerIndex: 2 },
+        { question: "ما هي المدينة الجزائرية التي تشتهر بصناعة الحلي الفضية المزينة بالمرجان؟", answers: ["تمنراست", "تيزي وزو (بني يني)", "غرداية", "قسنطينة"], correctAnswerIndex: 1 }
+    ];
+
+    let currentQuestionIndex, score, guaranteedAmount, timerInterval, isMuted = false;
+    const TIME_LIMIT = 30;
+
+    // --- 2. GET ELEMENTS & DEFINE TEMPLATES ---
+    const screens = { main: document.getElementById('main-menu-screen'), quiz: document.getElementById('quiz-screen'), moneyTree: document.getElementById('money-tree-screen'), prizeCheck: document.getElementById('prize-check-screen') };
+    // MODIFIED: Added menuClick sound
+    const sounds = { bgMusic: document.getElementById('bg-music'), suspense: document.getElementById('suspense-sound'), correct: document.getElementById('correct-sound'), wrong: document.getElementById('wrong-sound'), tick: document.getElementById('tick-sound'), checkpoint: document.getElementById('checkpoint-sound'), menuClick: document.getElementById('menu-click-sound') };
+    const pollModal = document.getElementById('poll-modal-overlay');
+    const aboutModal = document.getElementById('about-modal-overlay');
+    
+    // HTML Templates
+    // MODIFIED: Added id="support-btn" to the support link
+    screens.main.innerHTML = `<div class="container"><header style="width:100%; display:flex; justify-content:space-between; align-items:center;"><i id="main-sound-btn" class="fas fa-volume-up sound-icon-btn"></i><h1 style="flex-grow:1; text-align:center;">مليون الجزائر</h1><div style="width:2rem;"></div></header><i class="fas fa-star-and-crescent" style="font-size:clamp(6rem, 30vw, 8rem); color:var(--algeria-red); animation: pulse 4s infinite;"></i><nav style="width:100%; display:flex; flex-direction:column; gap:15px;"><div style="display:flex; justify-content:flex-end; align-items:center; gap:20px;"><span>مسابقة جديدة</span><a href="#" id="start-quiz-btn" class="green-button"></a></div><div style="display:flex; justify-content:flex-end; align-items:center; gap:20px;"><span>الاتصال بالدعم</span><a href="https://www.facebook.com/oussama.sriba.2025" id="support-btn" target="_blank" rel="noopener noreferrer" class="green-button"></a></div><div style="display:flex; justify-content:flex-end; align-items:center; gap:20px;"><span>حول البرنامج</span><a href="#" id="about-btn" class="green-button"></a></div><div style="display:flex; justify-content:flex-end; align-items:center; gap:20px;"><span>خروج</span><a href="#" id="exit-btn" class="green-button"></a></div></nav><p style="margin-top: 25px; font-weight: bold; color: #fff;">تطوير بواسطة <span style="color: orange; font-family: 'Kufam', sans-serif;">sriba oussama</span></p></div>`;
+    screens.quiz.innerHTML = `<div class="container quiz-container"><div class="status-bar"><div><span id="question-number" class="status-number">1</span><span>:السؤال</span></div><div><span id="score" class="status-number">0</span><span>:الرصيد</span></div></div><header class="quiz-header"><div class="lifelines" style="display:flex; gap:10px;"><div id="lifeline-phone" class="lifeline-icon"><i class="fas fa-phone-alt"></i></div><div id="lifeline-audience" class="lifeline-icon"><i class="fas fa-chart-bar"></i></div><div id="lifeline-5050" class="lifeline-icon"><b>50:50</b></div></div><div id="timer" class="timer">30</div><i id="quiz-sound-btn" class="fas fa-volume-up sound-icon-btn"></i></header><div class="question-box" style="width:100%; padding:15px; background-color:#000; border:3px solid; border-image:linear-gradient(45deg, #fff, #aaa) 1; text-align:center;"><p id="question-text"></p></div><div id="answers-container" class="answers-container" style="gap:15px; display:flex; flex-direction:column; width:100%;"><button class="answer-btn" data-index="0"></button><button class="answer-btn" data-index="1"></button><button class="answer-btn" data-index="2"></button><button class="answer-btn" data-index="3"></button></div></div>`;
+    screens.moneyTree.innerHTML = `<div class="container"><div class="money-ladder" id="money-ladder-container"></div><button id="next-question-btn">السؤال التالي</button></div>`;
+    screens.prizeCheck.innerHTML = `<div class="container"><h2 class="congrats-title"></h2><div class="check-container" id="check-container-content"><div class="check-header"><i class="fas fa-award check-award-icon"></i><h2>بنك مليون الجزائر</h2><p>شيك مصرفي</p></div><div class="check-body"><div class="check-line"><label>ادفعوا لأمر:</label><span class="value">اللاعب البطل</span></div><div class="check-line"><label>مبلغ وقدره:</label><span id="check-amount-text" class="value"></span></div><div class="check-line"><label>المبلغ بالأرقام:</label><span id="check-amount-value" class="value"></span></div></div><div class="check-signature"><p>إدارة المسابقة</p></div></div><button id="play-again-btn">العب مرة أخرى</button></div>`;
+    
+    aboutModal.innerHTML = `
+    <div class="about-modal">
+        <button id="close-about-btn" class="close-modal-btn">×</button>
+        <p style="font-size: 1.1rem; text-align: center;">🎉 مرحبًا بك في "مليون الجزائر 🇩🇿" — لعبة الأسئلة الذهبية التي تخليك تقول بفخر: "أنا دزيري… وفاهم بلادي!"</p>
+        <p>🔸 تم تطوير هذا التطبيق 100% بأيادٍ جزائرية 🇩🇿 من طرف الشاب أسامة سريبة، بشغف كبير لنقل الثقافة والمعرفة الجزائرية لكل بيت، لكل شاب، ولكل من يحب بلاده.</p>
+        <hr>
+        <h3>🧠 ما هي "مليون الجزائر"؟</h3>
+        <p>"مليون الجزائر" ليست مجرد لعبة…<br>إنها تحدٍ معرفي، مغامرة فكرية، واحتفال بهويتنا الوطنية.<br>مستوحاة من اللعبة العالمية "من سيربح المليون"، لكن بنكهة جزائرية 100%:</p>
+        <p>أسئلتنا جزائرية، لهجتنا دزيرية، ومعلوماتنا من قلب الوطن.<br>من التاريخ والمقاومة، إلى الشخصيات الوطنية، إلى العادات، الطبخ، اللغة، وحتى النوادر الشعبية!</p>
+        <hr>
+        <h3>🎯 مميزات اللعبة:</h3>
+        <ul>
+            <li>✅ 15 سؤال تصاعدي — كل سؤال يقربك من المليون</li>
+            <li>✅ 3 وسائل مساعدة: نحي جوبتين (50:50)، استشارة صديق، رأي الجمهور</li>
+            <li>✅ تصميم عصري وواجهة سوداء أنيقة مستوحاة من إصدار المليون الذهبي</li>
+            <li>✅ مستويات الجوائز تصعد تدريجيًا، مع مراحل مضمونة في السؤال 5 و10</li>
+            <li>✅ أسئلة متنوعة في أكثر من 30 مجال:<br>تاريخ 🇩🇿 | جغرافيا 🌍 | شخصيات وطنية 👤 | الثقافة الشعبية 🎭 | اللغة الأمازيغية ⵣ | الرياضة 🏆 | الفن 🎬 | المخترعين الجزائريين 💡… والمزيد</li>
+            <li>✅ لهجة جزائرية خفيفة تخلي اللعب ممتع</li>
+            <li>✅ تجربة تفاعلية + مؤثرات صوتية واقعية</li>
+            <li>✅ لا تحتاج اتصال إنترنت!</li>
+            <li>✅ مصمم خصيصًا للهواتف — خفيف وسريع حتى على الأجهزة الضعيفة</li>
+        </ul>
+        <hr>
+        <h3>📣 لماذا لازم تجرب "مليون الجزائر"؟</h3>
+        <p>لأننا بزاف مرات نلعبو ألعاب أجنبية…<br>أما اليوم، حان وقت اللعبة اللي تحكي علينا، بلغة قلوبنا، وتجمعنا كامل!</p>
+        <p>كل سؤال تجاوب عليه يخليك تكتشف معلومة، تفتخر ببلادك، وتحس بانتماء أقوى.</p>
+        <hr>
+        <h3>✨ هدفنا؟</h3>
+        <p>نصنع محتوى جزائري عالي الجودة<br>ننشر المعرفة بأسلوب ترفيهي<br>نزيدو نعتزو بجزائريتنا في كل مرة نلعبو</p>
+        <hr>
+        <h3>🛠️ معلومات المطوّر:</h3>
+        <p>👨‍💻 مطوّر التطبيق: أسامة سريبة (Sriba Oussama)<br>📍 دولة: الجزائر<br>📲 تواصل معنا عبر فيسبوك: صفحتنا الرسمية</p>
+        <hr>
+        <p style="text-align: center; font-weight: bold; font-size: 1.1rem;">🔔 لا تتردد — حمّل اللعبة الآن، تحدى نفسك، واصنع طريقك نحو مليون الجزائر 🇩🇿<br>وخلّي العالم يعرف: الدزيري… فايق وواعي 👊</p>
+    </div>`;
+
+    const answerButtons = screens.quiz.querySelectorAll('.answer-btn');
+    const timerEl = screens.quiz.querySelector('#timer');
+    const questionNumberEl = screens.quiz.querySelector('#question-number');
+    const scoreEl = screens.quiz.querySelector('#score');
+
+    // --- 3. CORE GAME LOGIC ---
+    function switchScreen(screenToShow) { Object.values(screens).forEach(s => s.classList.remove('active')); screenToShow.classList.add('active'); }
+    function startGame() { 
+        // Shuffle questions array for replayability
+        questions.sort(() => Math.random() - 0.5);
+        currentQuestionIndex = 0; 
+        score = 0; 
+        guaranteedAmount = 0; 
+        screens.quiz.querySelectorAll('.lifeline-icon').forEach(icon => icon.classList.remove('used')); 
+        playSound(sounds.bgMusic, true); 
+        showQuestion(); 
+    }
+    
+    function showQuestion() {
+        resetQuizUI();
+        if (currentQuestionIndex >= 15) { // Win condition if more questions than levels
+            showPrizeCheck(prizeLadder[14].prize, true);
+            return;
+        }
+        const q = questions[currentQuestionIndex];
+        questionNumberEl.textContent = currentQuestionIndex + 1;
+        scoreEl.textContent = score.toLocaleString();
+        screens.quiz.querySelector('#question-text').textContent = q.question;
+        answerButtons.forEach((b, i) => {
+            b.innerHTML = `<span class="answer-prefix">${i + 1}</span><span class="answer-text">${q.answers[i]}</span>`;
+        });
+        switchScreen(screens.quiz);
+        startTimer();
+    }
+    
+    function selectAnswer(e) {
+        stopTimer();
+        const selectedBtn = e.currentTarget;
+        const selectedIndex = parseInt(selectedBtn.dataset.index);
+        const correctIndex = questions[currentQuestionIndex].correctAnswerIndex;
+        answerButtons.forEach(b => b.disabled = true);
+        selectedBtn.classList.add('selected-wait');
+        playSound(sounds.suspense);
+        setTimeout(() => {
+            selectedBtn.classList.remove('selected-wait');
+            const isCorrect = selectedIndex === correctIndex;
+            if (isCorrect) {
+                playSound(sounds.correct);
+                selectedBtn.classList.add('correct');
+                const prize = prizeLadder[currentQuestionIndex];
+                score = prize.prize;
+                if (prize.guaranteed) {
+                    guaranteedAmount = score;
+                    playSound(sounds.checkpoint);
+                }
+            } else {
+                playSound(sounds.wrong);
+                selectedBtn.classList.add('incorrect');
+                answerButtons[correctIndex].classList.add('correct');
+            }
+            setTimeout(() => {
+                if (isCorrect) {
+                    if (currentQuestionIndex === prizeLadder.length - 1) { 
+                        showPrizeCheck(score, true);
+                    } else { 
+                        updateMoneyTree(); 
+                        switchScreen(screens.moneyTree); 
+                    }
+                } else { 
+                    showPrizeCheck(guaranteedAmount, false); 
+                }
+            }, 1500);
+        }, 2000);
+    }
+
+    // --- 4. UI & HELPER FUNCTIONS ---
+    function resetQuizUI() { clearInterval(timerInterval); timerEl.textContent = TIME_LIMIT; timerEl.style.color = ''; answerButtons.forEach(b => { b.className = 'answer-btn'; b.disabled = false; }); }
+    function startTimer() { let timeLeft = TIME_LIMIT; timerInterval = setInterval(() => { playSound(sounds.tick); timeLeft--; timerEl.textContent = timeLeft; if (timeLeft <= 10) { timerEl.style.color = 'var(--neon-red)'; } if (timeLeft <= 0) { stopTimer(); playSound(sounds.wrong); answerButtons[questions[currentQuestionIndex].correctAnswerIndex].classList.add('correct'); answerButtons.forEach(b => b.disabled = true); setTimeout(() => showPrizeCheck(guaranteedAmount, false), 2000); } }, 1000); }
+    function stopTimer() { clearInterval(timerInterval); }
+    function updateMoneyTree() { const c = screens.moneyTree.querySelector('#money-ladder-container'); c.innerHTML = ''; prizeLadder.slice().reverse().forEach(i => { const d = document.createElement('div'); d.className = 'prize-item'; if(i.guaranteed) d.classList.add('guaranteed'); if(i.level === currentQuestionIndex + 1) d.classList.add('current'); d.innerHTML = `<span class="level">${i.level}</span> <span class="amount">${i.prize.toLocaleString()}</span>`; c.appendChild(d); }); }
+    function showPrizeCheck(amount, isWinner) { const title = screens.prizeCheck.querySelector('.congrats-title'); const check = screens.prizeCheck.querySelector('#check-container-content'); if (isWinner) { title.textContent = "🎉 مبروك! لقد ربحت الجائزة الكبرى 🎉"; } else if (amount > 0) { title.textContent = "لقد فزت بمبلغ مضمون!"; } else { title.textContent = "حظ أوفر في المرة القادمة!"; } if (amount > 0) { check.style.display = 'block'; check.querySelector('#check-amount-text').textContent = `${numberToArabicText(amount)}`; check.querySelector('#check-amount-value').textContent = `${amount.toLocaleString()} د.ج`; } else { check.style.display = 'none'; } switchScreen(screens.prizeCheck); }
+    
+    // --- 5. LIFELINES ---
+    function useFiftyFifty(e) { if(e.currentTarget.classList.contains('used')) return; const correctIdx = questions[currentQuestionIndex].correctAnswerIndex; Array.from(answerButtons).filter((btn, idx) => idx !== correctIdx).sort(() => .5 - Math.random()).slice(0, 2).forEach(btn => btn.classList.add('hidden')); e.currentTarget.classList.add('used'); }
+    function usePhoneFriend(e) { if(e.currentTarget.classList.contains('used')) return; answerButtons[questions[currentQuestionIndex].correctAnswerIndex].classList.add('phone-suggestion'); e.currentTarget.classList.add('used'); }
+    
+    // --- MODIFIED: Rewrote the Audience Poll logic to be text-based and 100% reliable ---
+    function useAudiencePoll(e) {
+        if (e.currentTarget.classList.contains('used')) return;
+        e.currentTarget.classList.add('used');
+
+        const correctIdx = questions[currentQuestionIndex].correctAnswerIndex;
+        
+        // Find all answers that are currently visible to the player
+        const visibleIndices = [0, 1, 2, 3].filter(i => 
+            !answerButtons[i].classList.contains('hidden')
+        );
+
+        // If for some reason no answers are visible, do nothing.
+        if (visibleIndices.length === 0) return;
+
+        const percentages = [0, 0, 0, 0];
+        let remainingPercentage = 100;
+
+        // Give the correct answer a high base vote, but only if it's visible
+        if (visibleIndices.includes(correctIdx)) {
+            const correctVote = Math.floor(45 + Math.random() * 30); // 45% to 75%
+            percentages[correctIdx] = correctVote;
+            remainingPercentage -= correctVote;
+        }
+
+        // Get the list of wrong answers that are still visible
+        const otherVisibleIndices = visibleIndices.filter(i => i !== correctIdx);
+
+        // Distribute the remainder among the other visible wrong answers
+        for (let i = 0; i < otherVisibleIndices.length; i++) {
+            const index = otherVisibleIndices[i];
+            
+            if (i === otherVisibleIndices.length - 1) {
+                // The last visible wrong answer gets all the remaining percentage
+                percentages[index] = remainingPercentage;
+            } else {
+                // Give a random portion to the current one, but save some for the next
+                const randomPortion = Math.floor(Math.random() * remainingPercentage);
+                percentages[index] = randomPortion;
+                remainingPercentage -= randomPortion;
+            }
+        }
+        
+        // Inject the results as text into the modal
+        const resultsContainer = document.getElementById('poll-results-container');
+        resultsContainer.innerHTML = ''; // Clear previous results
+
+        visibleIndices.sort((a,b) => a - b).forEach(index => {
+            const resultItem = document.createElement('div');
+            resultItem.className = 'poll-result-item';
+            resultItem.innerHTML = `
+                <span class="poll-result-label">الخيار ${['أ', 'ب', 'ج', 'د'][index]}</span>
+                <span class="poll-result-value">${percentages[index]}%</span>
+            `;
+            resultsContainer.appendChild(resultItem);
+        });
+
+        // Finally, show the modal with the new content
+        pollModal.classList.add('visible');
+    }
+
+    // --- 6. SOUND CONTROL & EXIT ---
+    function playSound(sound, isLooping = false) { if (!isMuted) { if(!isLooping) sound.currentTime = 0; sound.play().catch(e => {}); } }
+    function toggleMute() { isMuted = !isMuted; const icons = document.querySelectorAll('.sound-icon-btn'); if(isMuted) { Object.values(sounds).forEach(s => { s.pause(); }); icons.forEach(i => i.className = "fas fa-volume-mute sound-icon-btn"); } else { icons.forEach(i => i.className = "fas fa-volume-up sound-icon-btn"); playSound(sounds.bgMusic, true); } }
+    function exitGame(e) { e.preventDefault(); Object.values(sounds).forEach(s => s.pause()); document.body.innerHTML = `<div style="text-align:center; color: #fff; display:flex; flex-direction:column; justify-content:center; align-items:center; height:100vh; animation: fadeInUp 0.5s ease-out;"><h1 style="font-size: 3rem; color: var(--main-yellow);">مع السلامة!</h1><p>شكراً للعب "مليون الجزائر".</p><p style="font-size: 0.8rem; margin-top: 20px;">يمكنك الآن إغلاق هذه النافذة بأمان.</p></div>`; document.body.style.background = '#000'; }
+    
+    // --- 7. EVENT LISTENERS (MODIFIED) ---
+    document.getElementById('start-quiz-btn').addEventListener('click', (e) => { 
+        e.preventDefault(); 
+        playSound(sounds.menuClick);
+        startGame(); 
+    });
+    answerButtons.forEach(button => button.addEventListener('click', selectAnswer));
+    screens.moneyTree.querySelector('#next-question-btn').addEventListener('click', () => { currentQuestionIndex++; showQuestion(); });
+    screens.prizeCheck.querySelector('#play-again-btn').addEventListener('click', () => { playSound(sounds.menuClick); switchScreen(screens.main); });
+    document.querySelectorAll('.sound-icon-btn').forEach(btn => btn.addEventListener('click', toggleMute));
+    screens.quiz.querySelector('#lifeline-5050').addEventListener('click', useFiftyFifty);
+    screens.quiz.querySelector('#lifeline-phone').addEventListener('click', usePhoneFriend);
+    screens.quiz.querySelector('#lifeline-audience').addEventListener('click', useAudiencePoll);
+    document.getElementById('close-poll-btn').addEventListener('click', () => pollModal.classList.remove('visible'));
+    
+    document.getElementById('support-btn').addEventListener('click', () => {
+        playSound(sounds.menuClick);
+    });
+
+    document.getElementById('about-btn').addEventListener('click', (e) => { 
+        e.preventDefault();
+        playSound(sounds.menuClick);
+        aboutModal.classList.add('visible'); 
+    });
+    aboutModal.addEventListener('click', (e) => { 
+        if (e.target === aboutModal || e.target.id === 'close-about-btn') { 
+            aboutModal.classList.remove('visible'); 
+        } 
+    });
+    document.getElementById('exit-btn').addEventListener('click', (e) => {
+        playSound(sounds.menuClick);
+        exitGame(e);
+    });
+
+    // --- 8. HELPER: Number to Arabic Text ---
+    function numberToArabicText(num) {
+        if (num === 1000000) return "مليون دينار جزائري";
+        // A simple function for now, can be expanded to full text conversion if needed
+        const units = ["", " ألف", " مليون"];
+        let i = 0;
+        let numStr = String(num);
+        while (numStr.length > 3) {
+            numStr = numStr.slice(0, numStr.length - 3);
+            i++;
+        }
+        return `${num.toLocaleString()} دينار جزائري`;
+    }
+</script>
+</body>
+</html>
